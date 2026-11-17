@@ -3,6 +3,14 @@
 
   const INE_ID = 'ine_retail_sales_madrid';
   const INE_NEEDLE = 'Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice';
+  const AUTOMATION_TABLES = [
+    {id:'60288',series:'ine_iass_raw',label:'IASS · Original (60288)',family:'iass',aliases:['indice general','total servicios','sector servicios de mercado']},
+    {id:'60289',series:'ine_iass_wda',label:'IASS · Ajustado calendario (60289)',family:'iass',aliases:['indice general','total servicios','sector servicios de mercado']},
+    {id:'60290',series:'ine_iass_cvec',label:'IASS · Ajustado calendario y estacionalidad (60290)',family:'iass',aliases:['indice general','total servicios','sector servicios de mercado']},
+    {id:'60272',series:'ine_ipi_raw',label:'IPI · Original (60272)',family:'ipi',aliases:['total industria','indice general','general']},
+    {id:'60276',series:'ine_ipi_wda',label:'IPI · Ajustado calendario (60276)',family:'ipi',aliases:['total industria','indice general','general']},
+    {id:'60280',series:'ine_ipi_cvec',label:'IPI · Ajustado calendario y estacionalidad (60280)',family:'ipi',aliases:['total industria','indice general','general']}
+  ];
   const CSV_FIELDS = ['series_id','series_name','source','period','value','unit','frequency','retrieved_at'];
   let currentRows = [];
   const fmt = value => new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(value);
@@ -50,10 +58,16 @@
     const svg=document.getElementById('chart'),w=1000,h=360,p={l:72,r:22,t:18,b:45};
     const ine=currentRows.filter(r=>r.source==='INE'&&r.series_id===INE_ID);
     const manual=currentRows.filter(r=>r.source.startsWith('Excel:'));
-    const groups=[{name:'INE · Madrid',rows:ine,color:'#2463eb'}];
+    const mode=document.getElementById('indicator').value;
+    const colors={ine_iass_raw:'#2463eb',ine_iass_wda:'#0c9488',ine_iass_cvec:'#d97706',ine_ipi_raw:'#2463eb',ine_ipi_wda:'#0c9488',ine_ipi_cvec:'#d97706'};
+    let groups=[];
+    if(mode==='retail')groups=[{name:'INE · Madrid',rows:ine,color:'#2463eb'}];
+    else groups=AUTOMATION_TABLES.filter(spec=>spec.family===mode).map(spec=>({name:spec.label,rows:currentRows.filter(row=>row.series_id===spec.series),color:colors[spec.series]}));
     const manualGroups=new Map();
     manual.forEach(row=>{const key=row.series_name||'Serie Excel';if(!manualGroups.has(key))manualGroups.set(key,[]);manualGroups.get(key).push(row);});
-    Array.from(manualGroups.entries()).forEach((entry,index)=>groups.push({name:entry[0],rows:entry[1],color:index===0?'#0c9488':'#d97706'}));
+    if(mode==='retail')Array.from(manualGroups.entries()).forEach((entry,index)=>groups.push({name:entry[0],rows:entry[1],color:index===0?'#0c9488':'#d97706'}));
+    const titles={retail:['Ventas minoristas — Madrid','INE y Excel manual · serie de Madrid frente a tu Excel'],iass:['Indicador de actividad del sector servicios (IASS)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],ipi:['Índice de producción industrial (IPI)','Tres versiones del índice general: original, ajustado de calendario y CVEC']};
+    document.getElementById('chart-title').textContent=titles[mode][0];document.getElementById('chart-description').textContent=titles[mode][1];
     const all=groups.flatMap(group=>group.rows.map(row=>({row,time:dateNumber(row.period),value:Number(row.value)}))).filter(item=>Number.isFinite(item.time)&&Number.isFinite(item.value));
     if(!all.length){svg.innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">No hay observaciones para mostrar.</text>';return;}
     const times=all.map(item=>item.time),latestTime=Math.max(...times),choice=document.getElementById('range').value;
@@ -80,19 +94,47 @@
     document.getElementById('load-status').textContent=message;
   }
 
+  function plainName(value) { return String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').replace(/[^a-z0-9]+/g,' ').trim(); }
+
+  function selectGeneral(payload, aliases) {
+    const rejected=['variacion','variaciones','tasa','porcentaje','media','promedio','acumulado'];
+    const candidates=(payload||[]).map(item=>{
+      const name=String(item.Nombre||'').trim(),plain=plainName(name),words=plain.split(/\s+/);
+      if(!words.includes('indice')||rejected.some(word=>words.includes(word)))return null;
+      const matchIndex=aliases.findIndex(alias=>plain.includes(plainName(alias)));
+      if(matchIndex<0)return null;
+      const score=100+(aliases.length-matchIndex)*100+(plain.endsWith('indice')?60:0)+(words.includes('nacional')||words.includes('espana')?40:0)-Math.floor(plain.length/100);
+      return {item,name,score};
+    }).filter(Boolean);
+    const max=Math.max(-Infinity,...candidates.map(item=>item.score)),top=candidates.filter(item=>item.score===max);
+    if(top.length!==1)throw new Error(top.length?'Selección ambigua de serie general del INE.':'No se encontró la serie general en la tabla del INE.');
+    return top[0].item;
+  }
+
   async function refreshIne() {
     const button=document.getElementById('refresh');button.disabled=true;button.textContent='Actualizando…';
     try {
-      const url='https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/75808?nult=12&tip=A';
-      const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error('INE respondió HTTP '+response.status);
-      const payload=await response.json(),matches=payload.filter(series=>String(series.Nombre||'').trim().toLocaleLowerCase('es').includes(INE_NEEDLE.toLocaleLowerCase('es')));
-      if(matches.length!==1)throw new Error('No se encontró una única serie INE; se conserva la vista anterior.');
-      const retrievedAt=new Date().toISOString(),series=matches[0],fresh=[];
-      (series.Data||[]).forEach(observation=>{if(observation.Fecha==null||observation.Valor==null)return;const date=new Date(observation.Fecha);if(Number.isNaN(date.getTime()))return;fresh.push({series_id:INE_ID,series_name:'Índice de ventas minoristas — Madrid',source:'INE',period:date.toISOString().slice(0,10),value:String(observation.Valor),unit:'Índice (2021=100)',frequency:'M',retrieved_at:retrievedAt});});
-      if(!fresh.length)throw new Error('La respuesta no contiene observaciones válidas.');
+      const retrievedAt=new Date().toISOString(),fresh=[];
+      const retailResponse=await fetch('https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/75808?nult=12&tip=A',{cache:'no-store'});
+      if(!retailResponse.ok)throw new Error('INE respondió HTTP '+retailResponse.status+' al consultar ventas minoristas.');
+      const retailPayload=await retailResponse.json(),retailMatches=retailPayload.filter(series=>plainName(series.Nombre).includes(plainName(INE_NEEDLE)));
+      if(retailMatches.length!==1)throw new Error('No se encontró una única serie de ventas minoristas; conserva los datos previos.');
+      const specs=[{id:'75808',series:INE_ID,label:'Índice de ventas minoristas — Madrid',aliases:[],retail:true},...AUTOMATION_TABLES];
+      for(const spec of specs){
+        let series;
+        if(spec.retail)series=retailMatches[0];
+        else {const response=await fetch('https://servicios.ine.es/wstempus/js/es/DATOS_TABLA/'+spec.id+'?tip=AM',{cache:'no-store'});if(!response.ok)throw new Error('INE respondió HTTP '+response.status+' al consultar '+spec.id+'.');series=selectGeneral(await response.json(),spec.aliases);}
+        (series.Data||[]).forEach(observation=>{
+          if(observation.Fecha==null||observation.Valor==null)return;
+          const time=typeof observation.Fecha==='number'?observation.Fecha:Number(observation.Fecha),date=new Date(Number.isFinite(time)?time:observation.Fecha);
+          if(Number.isNaN(date.getTime()))return;
+          fresh.push({series_id:spec.series,series_name:spec.label,source:'INE',period:spec.retail?date.toISOString().slice(0,10):date.toISOString().slice(0,7),value:String(observation.Valor),unit:'Índice (2021=100)',frequency:'M',retrieved_at:retrievedAt});
+        });
+      }
+      if(!fresh.length)throw new Error('Las respuestas no contienen observaciones válidas.');
       const merged=new Map(currentRows.map(row=>[row.series_id+'|'+row.period,row]));fresh.forEach(row=>merged.set(row.series_id+'|'+row.period,row));currentRows=Array.from(merged.values()).sort((a,b)=>a.series_id.localeCompare(b.series_id)||a.period.localeCompare(b.period));
-      updateCards();draw();refreshViewStatus('Vista actualizada directamente desde la API del INE: '+new Date(retrievedAt).toLocaleString('es-ES')+'. Para guardar el histórico en GitHub se mantiene la acción diaria.');
-    } catch(error) {refreshViewStatus('No se pudo actualizar desde el INE: '+error.message);}
+      updateCards();draw();refreshViewStatus('Vista actualizada desde el INE (ventas minoristas, IASS e IPI): '+new Date(retrievedAt).toLocaleString('es-ES')+'. Para guardar el histórico en GitHub se mantiene la acción diaria.');
+    } catch(error) {refreshViewStatus('No se pudo completar la actualización del INE: '+error.message);}
     finally {button.disabled=false;button.textContent='Actualizar datos';}
   }
 
@@ -117,6 +159,7 @@
       refreshViewStatus('Datos del repositorio: '+(retrieved?new Date(retrieved).toLocaleString('es-ES'):'fecha no disponible')+'. Usa “Actualizar datos” para consultar el INE ahora.');
     } catch(error) {refreshViewStatus('No se pudieron cargar los datos: '+error.message);document.getElementById('chart').innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">Datos no disponibles.</text>';}
     document.getElementById('range').addEventListener('change',draw);
+    document.getElementById('indicator').addEventListener('change',draw);
     document.getElementById('refresh').addEventListener('click',refreshIne);
     document.getElementById('download').addEventListener('click',downloadCsv);
   }

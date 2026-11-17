@@ -7,6 +7,14 @@
     "unit": "Índice (2021=100)",
     "frequency": "M"
   },
+  "ine_automation": [
+    {"table_id":"60288","series_id":"ine_iass_raw","label":"IASS · Original (60288)","family":"iass","match_any":["indice general","total servicios","sector servicios de mercado"]},
+    {"table_id":"60289","series_id":"ine_iass_wda","label":"IASS · Ajustado calendario (60289)","family":"iass","match_any":["indice general","total servicios","sector servicios de mercado"]},
+    {"table_id":"60290","series_id":"ine_iass_cvec","label":"IASS · Ajustado calendario y estacionalidad (60290)","family":"iass","match_any":["indice general","total servicios","sector servicios de mercado"]},
+    {"table_id":"60272","series_id":"ine_ipi_raw","label":"IPI · Original (60272)","family":"ipi","match_any":["total industria","indice general","general"]},
+    {"table_id":"60276","series_id":"ine_ipi_wda","label":"IPI · Ajustado calendario (60276)","family":"ipi","match_any":["total industria","indice general","general"]},
+    {"table_id":"60280","series_id":"ine_ipi_cvec","label":"IPI · Ajustado calendario y estacionalidad (60280)","family":"ipi","match_any":["total industria","indice general","general"]}
+  ],
   "manual": {
     "default_series_id": "manual_series",
     "default_label": "Serie del Excel",

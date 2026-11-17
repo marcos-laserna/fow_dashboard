@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import csv
 import json
+import re
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -95,6 +97,72 @@ def fetch_ine(ine: dict[str, Any], retrieved_at: str) -> list[dict[str, str]]:
     return rows
 
 
+def _plain(text: Any) -> str:
+    value = unicodedata.normalize("NFKD", str(text)).encode("ascii", "ignore").decode().casefold()
+    return re.sub(r"[^a-z0-9]+", " ", value).strip()
+
+
+def fetch_ine_automation(ine: dict[str, Any], retrieved_at: str) -> list[dict[str, str]]:
+    """Fetch the general national index used by the IASS/IPI automation tables."""
+    query = urllib.parse.urlencode({"tip": "AM"})
+    url = f"https://servicios.ine.es/wstempus/js/es/DATOS_TABLA/{ine['table_id']}?{query}"
+    request = urllib.request.Request(url, headers={"User-Agent": "FutureOfWorkData/1.0"})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            payload = json.load(response)
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"No se pudo descargar la tabla INE {ine['table_id']}: {exc}") from exc
+    if not isinstance(payload, list):
+        raise RuntimeError(f"Formato inesperado en la tabla INE {ine['table_id']}.")
+
+    aliases = [_plain(value) for value in ine["match_any"]]
+    rejected = {"variacion", "variaciones", "tasa", "porcentaje", "media", "promedio", "acumulado"}
+    ranked = []
+    for item in payload:
+        name = str(item.get("Nombre", "")).strip()
+        plain = _plain(name)
+        words = set(plain.split())
+        if "indice" not in words or words & rejected:
+            continue
+        match_index = next((index for index, alias in enumerate(aliases) if alias in plain), None)
+        if match_index is None:
+            continue
+        score = 100 + (len(aliases) - match_index) * 100 + (60 if plain.endswith("indice") else 0)
+        if "nacional" in words or "espana" in words:
+            score += 40
+        score -= len(plain) // 100
+        ranked.append((score, item, name))
+    if not ranked:
+        sample = [str(item.get("Nombre", "")) for item in payload[:12]]
+        raise RuntimeError(f"No se identificó el índice general en INE {ine['table_id']}. Muestra: {sample}")
+    top_score = max(item[0] for item in ranked)
+    best = [item for item in ranked if item[0] == top_score]
+    if len(best) != 1:
+        names = [item[2] for item in best]
+        raise RuntimeError(f"Selección ambigua en INE {ine['table_id']}: {names}")
+
+    rows = []
+    for observation in best[0][1].get("Data", []):
+        raw_date, raw_value = observation.get("Fecha"), observation.get("Valor")
+        if raw_date is None or raw_value in (None, "", ".."):
+            continue
+        if isinstance(raw_date, (int, float)) or str(raw_date).isdigit():
+            timestamp = float(raw_date)
+            if timestamp < 10_000_000_000:
+                timestamp *= 1000
+            obs_date = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc).date().replace(day=1)
+        else:
+            obs_date = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00")).date().replace(day=1)
+        rows.append({
+            "series_id": ine["series_id"], "series_name": ine["label"], "source": "INE",
+            "period": obs_date.strftime("%Y-%m"), "value": str(raw_value),
+            "unit": "Índice (2021=100)", "frequency": "M", "retrieved_at": retrieved_at,
+        })
+    if not rows:
+        raise RuntimeError(f"La serie general de INE {ine['table_id']} no contiene observaciones.")
+    return rows
+
+
 def read_manual_files(settings: dict[str, Any], retrieved_at: str) -> list[dict[str, str]]:
     manual = settings["manual"]
     rows: list[dict[str, str]] = []
@@ -175,6 +243,8 @@ def main() -> None:
     config = read_config()
     retrieved_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     rows = fetch_ine(config["ine"], retrieved_at)
+    for ine in config.get("ine_automation", []):
+        rows.extend(fetch_ine_automation(ine, retrieved_at))
     rows.extend(read_manual_files(config, retrieved_at))
     updated = merge_write(rows)
     print(f"Observaciones recibidas: {updated}")
