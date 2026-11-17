@@ -1,8 +1,17 @@
 name: Deploy test dashboard to Pages
 
 on:
-  # Manual only until the repository plan allows GitHub Pages.
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "data/processed/observations.csv"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Ingest data"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
