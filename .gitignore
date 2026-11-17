@@ -9,6 +9,7 @@ venv/
 .env.*
 !.env.example
 data/raw/
+site/data/
 *.log
 
 # Excel temporary/lock files
