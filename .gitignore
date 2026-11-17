@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local runtime and generated files
+.env
+.env.*
+!.env.example
+data/raw/
+*.log
+
+# Excel temporary/lock files
+~$*.xlsx
+~$*.xlsm
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

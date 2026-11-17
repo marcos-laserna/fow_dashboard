@@ -1,0 +1,15 @@
+{
+  "ine": {
+    "table_id": "75808",
+    "series_name_contains": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice",
+    "series_id": "ine_retail_sales_madrid",
+    "label": "Índice de ventas minoristas — Madrid",
+    "unit": "Índice (2021=100)",
+    "frequency": "M"
+  },
+  "manual": {
+    "default_series_id": "manual_series",
+    "default_label": "Serie del Excel",
+    "default_unit": ""
+  }
+}
