@@ -12,7 +12,17 @@ El resultado normalizado se guarda en `data/processed/observations.csv`.
 Para cargar una serie manual, copia `data/manual/plantilla_serie.xlsx`, rellena la
 hoja `datos` y añade el archivo a `data/manual/`. GitHub Actions está configurado
 para ejecutar la ingesta al cambiar esos archivos y una vez al día. La primera
-ejecución depende de publicar este repositorio en GitHub.
+ejecución ya se completó correctamente en GitHub Actions.
+
+La demo del dashboard está en `site/`. `data/manual/mock_serie_prueba.xlsx`
+contiene valores sintéticos para probar la segunda línea. Ejecuta `preview.ps1`
+en Windows y abre `http://127.0.0.1:8765`. El botón **Actualizar datos** consulta
+las últimas observaciones del INE para esta sesión; **Descargar CSV** exporta las
+dos series visibles. El refresco manual del navegador no modifica el histórico
+del repositorio.
+
+GitHub Pages no está habilitado: el plan actual no admite publicarlo desde este
+repositorio privado. Su workflow queda manual hasta que se resuelva esa limitación.
 
 El workflow conserva los datos procesados en Git. Si el Excel contiene datos
 privados, el repositorio de GitHub debe ser privado: borrar un archivo en un

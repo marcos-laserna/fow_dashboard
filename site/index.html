@@ -25,7 +25,11 @@
     .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:10px; }
     h2 { font-size:18px; margin:0; }
     .panel-head p { color:var(--muted); margin:3px 0 0; font-size:13px; }
-    select { background:white; border:1px solid #ccd5e0; border-radius:8px; padding:8px 10px; color:var(--ink); font:inherit; }
+    select,button { background:white; border:1px solid #ccd5e0; border-radius:8px; padding:8px 10px; color:var(--ink); font:inherit; }
+    button { cursor:pointer; font-weight:600; }
+    button.primary { background:var(--blue); border-color:var(--blue); color:white; }
+    button:disabled { opacity:.55; cursor:wait; }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
     #chart { width:100%; height:auto; min-height:250px; overflow:visible; }
     .legend { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:13px; margin-top:4px; }
     .swatch { width:10px; height:10px; border-radius:50%; background:var(--blue); }
@@ -42,7 +46,7 @@
     <p>Vista de prueba para contrastar la serie del INE con una serie aportada en Excel.</p>
   </header>
   <main>
-    <div class="notice"><strong>Prueba de ingesta:</strong> la serie mensual del INE ya se actualiza automáticamente. La carga Excel se habilitará al añadir el primer archivo manual.</div>
+    <div class="notice"><strong>Prueba de ingesta:</strong> la serie mensual del INE se actualiza automáticamente. La serie Excel es un mock con datos sintéticos; sustitúyelo por tu Excel real cuando quieras probar la carga.</div>
     <section class="cards" aria-label="Resumen">
       <article class="card"><div class="label">Último dato INE</div><div class="value" id="latest-value">—</div><div class="subvalue" id="latest-period">Cargando…</div></article>
       <article class="card"><div class="label">Períodos disponibles</div><div class="value" id="period-count">—</div><div class="subvalue">Observaciones mensuales</div></article>
@@ -50,63 +54,20 @@
     </section>
     <section class="panel">
       <div class="panel-head">
-        <div><h2>Índice de ventas minoristas — Madrid</h2><p>INE · precios constantes · índice 2021 = 100</p></div>
-        <label class="label" for="range">Ventana&nbsp; <select id="range" aria-label="Ventana temporal"><option value="60">Últimos 5 años</option><option value="120">Últimos 10 años</option><option value="all">Todo el histórico</option></select></label>
+        <div><h2>Ventas minoristas — Madrid</h2><p>INE y Excel de prueba · ambas series en escala de índice</p></div>
+        <div class="actions">
+          <label class="label" for="range">Ventana&nbsp; <select id="range" aria-label="Ventana temporal"><option value="60">Últimos 5 años</option><option value="120">Últimos 10 años</option><option value="all">Todo el histórico</option></select></label>
+          <button class="primary" id="refresh" type="button">Actualizar datos</button>
+          <button id="download" type="button">Descargar CSV</button>
+        </div>
       </div>
       <svg id="chart" viewBox="0 0 1000 360" role="img" aria-label="Serie temporal de ventas minoristas del INE"></svg>
-      <div class="legend"><span class="swatch"></span><span>INE · Madrid</span></div>
+      <div class="legend" id="legend"></div>
+      <div class="status" id="axis-note"></div>
       <div class="status" id="load-status" role="status">Cargando datos…</div>
     </section>
     <footer>Fuente: Instituto Nacional de Estadística. La frecuencia del gráfico depende de la publicación de cada indicador. Datos de uso público; valores mensuales sujetos a revisión.</footer>
   </main>
-  <script>
-    const csvRows = text => {
-      const lines = text.trim().split(/\r?\n/);
-      const parse = line => {
-        const out=[]; let cell='', quoted=false;
-        for(let i=0;i<line.length;i++) { const c=line[i]; if(c==='"'&&quoted&&line[i+1]==='"'){cell+='"';i++;} else if(c==='"'){quoted=!quoted;} else if(c===','&&!quoted){out.push(cell);cell='';} else cell+=c; }
-        out.push(cell); return out;
-      };
-      const headers=parse(lines.shift());
-      return lines.filter(Boolean).map(line=>Object.fromEntries(parse(line).map((v,i)=>[headers[i],v])));
-    };
-    const fmt = value => new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(value);
-    function draw(rows) {
-      const svg=document.getElementById('chart'); const w=1000,h=360,p={l:72,r:22,t:18,b:45};
-      const choice=document.getElementById('range').value;
-      if(choice!=='all') rows=rows.slice(-Number(choice));
-      if(!rows.length){svg.innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">No hay observaciones para mostrar.</text>';return;}
-      const vals=rows.map(r=>Number(r.value)); const lo=Math.min(...vals),hi=Math.max(...vals); const pad=(hi-lo||1)*.12; const min=lo-pad,max=hi+pad;
-      const x=i=>p.l+i*(w-p.l-p.r)/Math.max(rows.length-1,1); const y=v=>h-p.b-(v-min)*(h-p.t-p.b)/(max-min);
-      const parts=[];
-      for(let i=0;i<5;i++){const v=min+(max-min)*i/4, yy=y(v);parts.push(`<line x1="${p.l}" y1="${yy}" x2="${w-p.r}" y2="${yy}" stroke="#e9edf2"/><text x="${p.l-10}" y="${yy+4}" text-anchor="end" fill="#718198" font-size="12">${fmt(v)}</text>`);}
-      const tickCount=Math.min(6,rows.length); for(let i=0;i<tickCount;i++){const index=Math.round(i*(rows.length-1)/Math.max(tickCount-1,1));parts.push(`<text x="${x(index)}" y="${h-12}" text-anchor="middle" fill="#718198" font-size="12">${rows[index].period.slice(0,7)}</text>`);}
-      const points=rows.map((r,i)=>`${x(i)},${y(Number(r.value))}`).join(' ');
-      parts.push(`<polyline points="${points}" fill="none" stroke="#2463eb" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`);
-      const stride=Math.max(1,Math.floor(rows.length/30));
-      rows.forEach((r,i)=>{if(i%stride===0||i===rows.length-1)parts.push(`<circle cx="${x(i)}" cy="${y(Number(r.value))}" r="3.5" fill="#2463eb"><title>${r.period}: ${fmt(Number(r.value))}</title></circle>`);});
-      svg.innerHTML=parts.join('');
-    }
-    async function load() {
-      try {
-        const response=await fetch('./data/observations.csv',{cache:'no-store'}); if(!response.ok)throw new Error(`HTTP ${response.status}`);
-        const records=csvRows(await response.text());
-        const ine=records.filter(r=>r.source==='INE'&&r.series_id==='ine_retail_sales_madrid').sort((a,b)=>a.period.localeCompare(b.period));
-        const manual=records.filter(r=>r.source.startsWith('Excel:'));
-        if(!ine.length)throw new Error('El CSV no contiene la serie INE esperada.');
-        const last=ine.at(-1); document.getElementById('latest-value').textContent=fmt(Number(last.value));
-        document.getElementById('latest-period').textContent=last.period.slice(0,7);
-        document.getElementById('period-count').textContent=String(ine.length);
-        document.getElementById('manual-status').textContent=manual.length?fmt(Number(manual.at(-1).value)):'Pendiente';
-        document.getElementById('manual-detail').textContent=manual.length?`${manual.at(-1).series_name} · ${manual.at(-1).period}`:'Añade un Excel a data/manual/';
-        document.getElementById('load-status').textContent=`Datos descargados: ${new Date(last.retrieved_at).toLocaleString('es-ES')} · ${records.length} observaciones totales.`;
-        draw(ine); document.getElementById('range').addEventListener('change',()=>draw(ine));
-      } catch(error) {
-        document.getElementById('load-status').textContent=`No se pudieron cargar los datos: ${error.message}`;
-        document.getElementById('chart').innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">Datos no disponibles.</text>';
-      }
-    }
-    load();
-  </script>
+  <script src="./dashboard.js"></script>
 </body>
 </html>
