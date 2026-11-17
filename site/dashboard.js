@@ -13,6 +13,10 @@
   ];
   const CSV_FIELDS = ['series_id','series_name','source','period','value','unit','frequency','retrieved_at'];
   let currentRows = [];
+  const seriesSelectionByMode = {};
+  const sourceSelection = new Set();
+  const knownSources = new Set();
+  let activeSeriesMode = null;
   const fmt = value => new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(value);
 
   function parseCsv(text) {
@@ -54,24 +58,71 @@
     document.getElementById('manual-detail').textContent=manualLast?manualLast.series_name+' · '+displayDate(manualLast.period):'Añade un Excel a data/manual/';
   }
 
-  function draw() {
-    const svg=document.getElementById('chart'),w=1000,h=360,p={l:72,r:22,t:18,b:45};
+  function buildGroups(mode) {
     const ine=currentRows.filter(r=>r.source==='INE'&&r.series_id===INE_ID);
     const manual=currentRows.filter(r=>r.source.startsWith('Excel:'));
-    const mode=document.getElementById('indicator').value;
     const colors={ine_iass_raw:'#2463eb',ine_iass_wda:'#0c9488',ine_iass_cvec:'#d97706',ine_ipi_raw:'#2463eb',ine_ipi_wda:'#0c9488',ine_ipi_cvec:'#d97706'};
     let groups=[];
-    if(mode==='retail')groups=[{name:'INE · Madrid',rows:ine,color:'#2463eb'}];
-    else groups=AUTOMATION_TABLES.filter(spec=>spec.family===mode).map(spec=>({name:spec.label,rows:currentRows.filter(row=>row.series_id===spec.series),color:colors[spec.series]}));
+    if(mode==='retail')groups=[{key:INE_ID,name:'INE · Madrid',rows:ine,color:'#2463eb'}];
+    else groups=AUTOMATION_TABLES.filter(spec=>spec.family===mode).map(spec=>({key:spec.series,name:spec.label,rows:currentRows.filter(row=>row.series_id===spec.series),color:colors[spec.series]}));
     const manualGroups=new Map();
     manual.forEach(row=>{const key=row.series_name||'Serie Excel';if(!manualGroups.has(key))manualGroups.set(key,[]);manualGroups.get(key).push(row);});
-    if(mode==='retail')Array.from(manualGroups.entries()).forEach((entry,index)=>groups.push({name:entry[0],rows:entry[1],color:index===0?'#0c9488':'#d97706'}));
-    const titles={retail:['Ventas minoristas — Madrid','INE y Excel manual · serie de Madrid frente a tu Excel'],iass:['Indicador de actividad del sector servicios (IASS)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],ipi:['Índice de producción industrial (IPI)','Tres versiones del índice general: original, ajustado de calendario y CVEC']};
+    if(mode==='retail')Array.from(manualGroups.entries()).forEach((entry,index)=>groups.push({key:'manual_series|'+entry[0],name:entry[0],rows:entry[1],color:index===0?'#0c9488':'#d97706'}));
+    if(mode==='other'){
+      const otherGroups=new Map(),palette=['#0c9488','#d97706','#7c3aed','#db2777','#0284c7'];
+      currentRows.filter(row=>row.source!=='INE').forEach(row=>{const key=row.source+'|'+row.series_id+'|'+row.series_name;if(!otherGroups.has(key))otherGroups.set(key,[]);otherGroups.get(key).push(row);});
+      Array.from(otherGroups.entries()).forEach((entry,index)=>groups.push({key:entry[0],name:sourceLabel(entry[1][0].source)+' · '+entry[1][0].series_name,rows:entry[1],color:palette[index%palette.length]}));
+    }
+    return groups;
+  }
+
+  function renderSeriesOptions(mode) {
+    if(activeSeriesMode)seriesSelectionByMode[activeSeriesMode]=new Set(Array.from(document.querySelectorAll('#series-options input:checked')).map(input=>input.value));
+    const groups=buildGroups(mode),previous=seriesSelectionByMode[mode],known=seriesSelectionByMode[mode+'_known']||new Set();
+    document.getElementById('series-options').innerHTML=groups.map(group=>{
+      const checked=!previous||previous.has(group.key)||!known.has(group.key);
+      return '<label class="check-option"><input class="series-option" type="checkbox" value="'+escapeHtml(group.key)+'"'+(checked?' checked':'')+'> '+escapeHtml(group.name)+'</label>';
+    }).join('');
+    seriesSelectionByMode[mode+'_known']=new Set(groups.map(group=>group.key));
+    activeSeriesMode=mode;
+  }
+
+  function renderSourceOptions() {
+    const sources=Array.from(new Set(currentRows.map(row=>row.source))).sort((a,b)=>a.localeCompare(b));
+    sources.forEach(source=>{if(!knownSources.has(source))sourceSelection.add(source);});
+    Array.from(sourceSelection).forEach(source=>{if(!sources.includes(source))sourceSelection.delete(source);});
+    sources.forEach(source=>knownSources.add(source));
+    document.getElementById('source-options').innerHTML=sources.map(source=>'<label class="check-option"><input class="source-option" type="checkbox" value="'+escapeHtml(source)+'"'+(sourceSelection.has(source)?' checked':'')+'> '+escapeHtml(sourceLabel(source))+'</label>').join('');
+  }
+
+  function sourceLabel(source) { return source==='INE'?'INE':source.startsWith('Excel:')?'Excel · '+source.slice(6):source; }
+
+  function selectedGroups() {
+    const selected=new Set(Array.from(document.querySelectorAll('#series-options input:checked')).map(input=>input.value));
+    return buildGroups(document.getElementById('indicator').value).filter(group=>selected.has(group.key));
+  }
+
+  function dateBounds(rows) {
+    const times=rows.map(row=>dateNumber(row.period)).filter(Number.isFinite);
+    let min=-Infinity,max=Infinity;
+    const from=document.getElementById('date-from').value,to=document.getElementById('date-to').value;
+    if(from)min=Date.UTC(Number(from.slice(0,4)),Number(from.slice(5,7))-1,1);
+    if(to)max=Date.UTC(Number(to.slice(0,4)),Number(to.slice(5,7)),1)-1;
+    const choice=document.getElementById('range').value;
+    if(choice!=='all'&&times.length){const relative=new Date(Math.max(...times));relative.setUTCMonth(relative.getUTCMonth()-Number(choice));min=Math.max(min,relative.getTime());}
+    return {min,max};
+  }
+
+  function draw() {
+    const svg=document.getElementById('chart'),w=1000,h=360,p={l:72,r:22,t:18,b:45};
+    const mode=document.getElementById('indicator').value;
+    const groups=selectedGroups();
+    const titles={retail:['Ventas minoristas — Madrid','INE · Madrid. Marca una serie manual para compararla si quieres.'],iass:['Indicador de actividad del sector servicios (IASS)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],ipi:['Índice de producción industrial (IPI)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],other:['Excel y otras fuentes','Series cargadas manualmente y bases adicionales, como Datacomex cuando se incorpore.']};
     document.getElementById('chart-title').textContent=titles[mode][0];document.getElementById('chart-description').textContent=titles[mode][1];
     const all=groups.flatMap(group=>group.rows.map(row=>({row,time:dateNumber(row.period),value:Number(row.value)}))).filter(item=>Number.isFinite(item.time)&&Number.isFinite(item.value));
     if(!all.length){svg.innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">No hay observaciones para mostrar.</text>';return;}
-    const times=all.map(item=>item.time),latestTime=Math.max(...times),choice=document.getElementById('range').value;
-    const filteredGroups=groups.map(group=>({...group,rows:group.rows.filter(row=>{const t=dateNumber(row.period);if(choice==='all')return true;const start=new Date(latestTime);start.setUTCMonth(start.getUTCMonth()-Number(choice));return t>=start.getTime()&&t<=latestTime;}).sort((a,b)=>dateNumber(a.period)-dateNumber(b.period))}));
+    const bounds=dateBounds(all.map(item=>item.row));
+    const filteredGroups=groups.map(group=>({...group,rows:group.rows.filter(row=>{const t=dateNumber(row.period);return t>=bounds.min&&t<=bounds.max;}).sort((a,b)=>dateNumber(a.period)-dateNumber(b.period))}));
     const available=filteredGroups.flatMap(group=>group.rows.map(row=>({row,time:dateNumber(row.period),value:Number(row.value),group}))).filter(item=>Number.isFinite(item.time)&&Number.isFinite(item.value));
     if(!available.length){svg.innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">No hay observaciones en este intervalo.</text>';return;}
     const unitNames=new Set(available.map(item=>item.row.unit).filter(Boolean)),normalized=unitNames.size>1||available.some(item=>!item.row.unit);
@@ -133,7 +184,7 @@
       }
       if(!fresh.length)throw new Error('Las respuestas no contienen observaciones válidas.');
       const merged=new Map(currentRows.map(row=>[row.series_id+'|'+row.period,row]));fresh.forEach(row=>merged.set(row.series_id+'|'+row.period,row));currentRows=Array.from(merged.values()).sort((a,b)=>a.series_id.localeCompare(b.series_id)||a.period.localeCompare(b.period));
-      updateCards();draw();refreshViewStatus('Vista actualizada desde el INE (ventas minoristas, IASS e IPI): '+new Date(retrievedAt).toLocaleString('es-ES')+'. Para guardar el histórico en GitHub se mantiene la acción diaria.');
+      updateCards();renderSeriesOptions(document.getElementById('indicator').value);renderSourceOptions();draw();refreshViewStatus('Vista actualizada desde el INE (ventas minoristas, IASS e IPI): '+new Date(retrievedAt).toLocaleString('es-ES')+'. Para guardar el histórico en GitHub se mantiene la acción diaria.');
     } catch(error) {refreshViewStatus('No se pudo completar la actualización del INE: '+error.message);}
     finally {button.disabled=false;button.textContent='Actualizar datos';}
   }
@@ -144,7 +195,12 @@
   }
 
   function downloadCsv() {
-    const ordered=currentRows.slice().sort((a,b)=>a.series_id.localeCompare(b.series_id)||a.period.localeCompare(b.period));
+    const selectedSources=new Set(Array.from(document.querySelectorAll('#source-options input:checked')).map(input=>input.value));
+    const groups=selectedGroups();
+    const candidates=currentRows.filter(row=>selectedSources.has(row.source)&&groups.some(group=>group.rows.includes(row)));
+    const bounds=dateBounds(candidates);
+    const ordered=candidates.filter(row=>{const t=dateNumber(row.period);return t>=bounds.min&&t<=bounds.max;}).sort((a,b)=>a.series_id.localeCompare(b.series_id)||a.period.localeCompare(b.period));
+    if(!ordered.length){refreshViewStatus('La selección actual no contiene filas para descargar.');return;}
     const csv='\uFEFF'+[CSV_FIELDS.join(','),...ordered.map(row=>CSV_FIELDS.map(field=>escapeCsv(row[field])).join(','))].join('\r\n');
     const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
     link.href=url;link.download='future_of_work_series.csv';document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
@@ -155,11 +211,19 @@
       const response=await fetch('./data/observations.csv',{cache:'no-store'});if(!response.ok)throw new Error('CSV HTTP '+response.status);
       currentRows=parseCsv(await response.text());
       if(!currentRows.some(row=>row.source==='INE'&&row.series_id===INE_ID))throw new Error('El CSV no contiene la serie INE esperada.');
-      updateCards();draw();const retrieved=currentRows.map(row=>row.retrieved_at).filter(Boolean).sort().at(-1);
+      updateCards();renderSourceOptions();renderSeriesOptions(document.getElementById('indicator').value);draw();const retrieved=currentRows.map(row=>row.retrieved_at).filter(Boolean).sort().at(-1);
       refreshViewStatus('Datos del repositorio: '+(retrieved?new Date(retrieved).toLocaleString('es-ES'):'fecha no disponible')+'. Usa “Actualizar datos” para consultar el INE ahora.');
     } catch(error) {refreshViewStatus('No se pudieron cargar los datos: '+error.message);document.getElementById('chart').innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">Datos no disponibles.</text>';}
     document.getElementById('range').addEventListener('change',draw);
-    document.getElementById('indicator').addEventListener('change',draw);
+    document.getElementById('date-from').addEventListener('change',draw);
+    document.getElementById('date-to').addEventListener('change',draw);
+    document.getElementById('indicator').addEventListener('change',()=>{renderSeriesOptions(document.getElementById('indicator').value);draw();});
+    document.getElementById('series-options').addEventListener('change',draw);
+    document.getElementById('source-options').addEventListener('change',event=>{if(event.target.classList.contains('source-option')){if(event.target.checked)sourceSelection.add(event.target.value);else sourceSelection.delete(event.target.value);}});
+    document.getElementById('series-all').addEventListener('click',()=>{document.querySelectorAll('#series-options input').forEach(input=>input.checked=true);draw();});
+    document.getElementById('series-none').addEventListener('click',()=>{document.querySelectorAll('#series-options input').forEach(input=>input.checked=false);draw();});
+    document.getElementById('source-all').addEventListener('click',()=>{document.querySelectorAll('#source-options input').forEach(input=>input.checked=true);sourceSelection.clear();document.querySelectorAll('#source-options input').forEach(input=>sourceSelection.add(input.value));});
+    document.getElementById('source-none').addEventListener('click',()=>{document.querySelectorAll('#source-options input').forEach(input=>input.checked=false);sourceSelection.clear();});
     document.getElementById('refresh').addEventListener('click',refreshIne);
     document.getElementById('download').addEventListener('click',downloadCsv);
   }

@@ -30,13 +30,21 @@
     button.primary { background:var(--blue); border-color:var(--blue); color:white; }
     button:disabled { opacity:.55; cursor:wait; }
     .actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .selection-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:12px 0; }
+    fieldset { min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
+    legend { padding:0 5px; color:var(--muted); font-size:13px; font-weight:600; }
+    .checklist { display:flex; flex-wrap:wrap; gap:7px 14px; }
+    .check-option { display:inline-flex; align-items:center; gap:6px; font-size:13px; }
+    .selection-tools { display:flex; gap:8px; margin-top:8px; }
+    .selection-tools button { padding:4px 7px; font-size:12px; }
+    .filter-note { color:var(--muted); font-size:12px; margin:0 0 8px; }
     #chart { width:100%; height:auto; min-height:250px; overflow:visible; }
     .legend { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:13px; margin-top:4px; }
     .swatch { width:10px; height:10px; border-radius:50%; background:var(--blue); }
     .status { color:var(--muted); font-size:12px; padding-top:14px; }
     .empty { fill:var(--muted); font-size:15px; }
     footer { color:var(--muted); font-size:12px; margin-top:15px; }
-    @media(max-width:720px) { .cards { grid-template-columns:1fr; gap:10px; } .card { min-height:82px; } .panel { padding:15px 12px; } .panel-head { flex-direction:column; } }
+    @media(max-width:720px) { .cards { grid-template-columns:1fr; gap:10px; } .card { min-height:82px; } .panel { padding:15px 12px; } .panel-head { flex-direction:column; } .selection-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -56,12 +64,19 @@
       <div class="panel-head">
         <div><h2 id="chart-title">Ventas minoristas — Madrid</h2><p id="chart-description">INE y Excel de prueba · ambas series en escala de índice</p></div>
         <div class="actions">
-          <label class="label" for="range">Ventana&nbsp; <select id="range" aria-label="Ventana temporal"><option value="60">Últimos 5 años</option><option value="120">Últimos 10 años</option><option value="all">Todo el histórico</option></select></label>
-          <label class="label" for="indicator">Indicador&nbsp; <select id="indicator" aria-label="Indicador"><option value="retail">Ventas minoristas + Excel</option><option value="iass">IASS · Servicios</option><option value="ipi">IPI · Industria</option></select></label>
+          <label class="label" for="range">Ventana rápida&nbsp; <select id="range" aria-label="Ventana temporal"><option value="all">Todo el histórico</option><option value="60">Últimos 5 años</option><option value="120">Últimos 10 años</option></select></label>
+          <label class="label" for="date-from">Desde&nbsp; <input id="date-from" type="month" aria-label="Mes inicial"></label>
+          <label class="label" for="date-to">Hasta&nbsp; <input id="date-to" type="month" aria-label="Mes final"></label>
+          <label class="label" for="indicator">Vista&nbsp; <select id="indicator" aria-label="Vista de series"><option value="retail">Ventas minoristas</option><option value="iass">IASS · Servicios</option><option value="ipi">IPI · Industria</option><option value="other">Excel y otras fuentes</option></select></label>
           <button class="primary" id="refresh" type="button">Actualizar datos</button>
-          <button id="download" type="button">Descargar CSV</button>
+          <button id="download" type="button">Descargar CSV seleccionado</button>
         </div>
       </div>
+      <div class="selection-grid">
+        <fieldset><legend>Series para la gráfica y el CSV</legend><div class="checklist" id="series-options"></div><div class="selection-tools"><button id="series-all" type="button">Marcar todas</button><button id="series-none" type="button">Desmarcar todas</button></div></fieldset>
+        <fieldset><legend>Fuentes incluidas en el CSV</legend><div class="checklist" id="source-options"></div><div class="selection-tools"><button id="source-all" type="button">Marcar todas</button><button id="source-none" type="button">Desmarcar todas</button></div></fieldset>
+      </div>
+      <p class="filter-note">Las fechas y las casillas de series se aplican a la gráfica y a la descarga. La selección de fuentes solo afecta al CSV.</p>
       <svg id="chart" viewBox="0 0 1000 360" role="img" aria-label="Serie temporal de ventas minoristas del INE"></svg>
       <div class="legend" id="legend"></div>
       <div class="status" id="axis-note"></div>
