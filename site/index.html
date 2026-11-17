@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Panel de prueba de indicadores de Series Dashboard">
+  <title>Series Dashboard — panel de prueba</title>
+  <style>
+    :root { color-scheme: light; --ink:#182b45; --muted:#62738a; --line:#e5eaf0; --blue:#2463eb; --teal:#0c9488; --paper:#f5f7fa; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    header { background:#10263f; color:white; padding:26px max(24px,calc((100vw - 1120px)/2)); }
+    header .eyebrow { color:#a9c4e3; font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
+    h1 { margin:5px 0 3px; font-size:clamp(25px,4vw,34px); line-height:1.2; }
+    header p { margin:7px 0 0; color:#d3dfec; }
+    main { max-width:1120px; margin:28px auto; padding:0 20px 40px; }
+    .notice { padding:12px 15px; border:1px solid #c9d9f5; border-radius:10px; background:#edf4ff; color:#27466c; margin-bottom:18px; }
+    .cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; margin-bottom:18px; }
+    .card,.panel { background:white; border:1px solid var(--line); border-radius:14px; box-shadow:0 3px 14px #142b4408; }
+    .card { padding:17px 19px; min-height:105px; }
+    .label { color:var(--muted); font-size:13px; }
+    .value { margin-top:6px; font-size:25px; font-weight:700; letter-spacing:-.03em; }
+    .subvalue { color:var(--muted); font-size:12px; margin-top:2px; }
+    .panel { padding:20px; }
+    .panel-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:10px; }
+    h2 { font-size:18px; margin:0; }
+    .panel-head p { color:var(--muted); margin:3px 0 0; font-size:13px; }
+    select { background:white; border:1px solid #ccd5e0; border-radius:8px; padding:8px 10px; color:var(--ink); font:inherit; }
+    #chart { width:100%; height:auto; min-height:250px; overflow:visible; }
+    .legend { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:13px; margin-top:4px; }
+    .swatch { width:10px; height:10px; border-radius:50%; background:var(--blue); }
+    .status { color:var(--muted); font-size:12px; padding-top:14px; }
+    .empty { fill:var(--muted); font-size:15px; }
+    footer { color:var(--muted); font-size:12px; margin-top:15px; }
+    @media(max-width:720px) { .cards { grid-template-columns:1fr; gap:10px; } .card { min-height:82px; } .panel { padding:15px 12px; } .panel-head { flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Series Dashboard · prototipo</div>
+    <h1>Indicadores de actividad y consumo</h1>
+    <p>Vista de prueba para contrastar la serie del INE con una serie aportada en Excel.</p>
+  </header>
+  <main>
+    <div class="notice"><strong>Prueba de ingesta:</strong> la serie mensual del INE ya se actualiza automáticamente. La carga Excel se habilitará al añadir el primer archivo manual.</div>
+    <section class="cards" aria-label="Resumen">
+      <article class="card"><div class="label">Último dato INE</div><div class="value" id="latest-value">—</div><div class="subvalue" id="latest-period">Cargando…</div></article>
+      <article class="card"><div class="label">Períodos disponibles</div><div class="value" id="period-count">—</div><div class="subvalue">Observaciones mensuales</div></article>
+      <article class="card"><div class="label">Excel manual</div><div class="value" id="manual-status">Pendiente</div><div class="subvalue" id="manual-detail">Añade un Excel a data/manual/</div></article>
+    </section>
+    <section class="panel">
+      <div class="panel-head">
+        <div><h2>Índice de ventas minoristas — Madrid</h2><p>INE · precios constantes · índice 2021 = 100</p></div>
+        <label class="label" for="range">Ventana&nbsp; <select id="range" aria-label="Ventana temporal"><option value="60">Últimos 5 años</option><option value="120">Últimos 10 años</option><option value="all">Todo el histórico</option></select></label>
+      </div>
+      <svg id="chart" viewBox="0 0 1000 360" role="img" aria-label="Serie temporal de ventas minoristas del INE"></svg>
+      <div class="legend"><span class="swatch"></span><span>INE · Madrid</span></div>
+      <div class="status" id="load-status" role="status">Cargando datos…</div>
+    </section>
+    <footer>Fuente: Instituto Nacional de Estadística. La frecuencia del gráfico depende de la publicación de cada indicador. Datos de uso público; valores mensuales sujetos a revisión.</footer>
+  </main>
+  <script>
+    const csvRows = text => {
+      const lines = text.trim().split(/\r?\n/);
+      const parse = line => {
+        const out=[]; let cell='', quoted=false;
+        for(let i=0;i<line.length;i++) { const c=line[i]; if(c==='"'&&quoted&&line[i+1]==='"'){cell+='"';i++;} else if(c==='"'){quoted=!quoted;} else if(c===','&&!quoted){out.push(cell);cell='';} else cell+=c; }
+        out.push(cell); return out;
+      };
+      const headers=parse(lines.shift());
+      return lines.filter(Boolean).map(line=>Object.fromEntries(parse(line).map((v,i)=>[headers[i],v])));
+    };
+    const fmt = value => new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(value);
+    function draw(rows) {
+      const svg=document.getElementById('chart'); const w=1000,h=360,p={l:72,r:22,t:18,b:45};
+      const choice=document.getElementById('range').value;
+      if(choice!=='all') rows=rows.slice(-Number(choice));
+      if(!rows.length){svg.innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">No hay observaciones para mostrar.</text>';return;}
+      const vals=rows.map(r=>Number(r.value)); const lo=Math.min(...vals),hi=Math.max(...vals); const pad=(hi-lo||1)*.12; const min=lo-pad,max=hi+pad;
+      const x=i=>p.l+i*(w-p.l-p.r)/Math.max(rows.length-1,1); const y=v=>h-p.b-(v-min)*(h-p.t-p.b)/(max-min);
+      const parts=[];
+      for(let i=0;i<5;i++){const v=min+(max-min)*i/4, yy=y(v);parts.push(`<line x1="${p.l}" y1="${yy}" x2="${w-p.r}" y2="${yy}" stroke="#e9edf2"/><text x="${p.l-10}" y="${yy+4}" text-anchor="end" fill="#718198" font-size="12">${fmt(v)}</text>`);}
+      const tickCount=Math.min(6,rows.length); for(let i=0;i<tickCount;i++){const index=Math.round(i*(rows.length-1)/Math.max(tickCount-1,1));parts.push(`<text x="${x(index)}" y="${h-12}" text-anchor="middle" fill="#718198" font-size="12">${rows[index].period.slice(0,7)}</text>`);}
+      const points=rows.map((r,i)=>`${x(i)},${y(Number(r.value))}`).join(' ');
+      parts.push(`<polyline points="${points}" fill="none" stroke="#2463eb" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`);
+      const stride=Math.max(1,Math.floor(rows.length/30));
+      rows.forEach((r,i)=>{if(i%stride===0||i===rows.length-1)parts.push(`<circle cx="${x(i)}" cy="${y(Number(r.value))}" r="3.5" fill="#2463eb"><title>${r.period}: ${fmt(Number(r.value))}</title></circle>`);});
+      svg.innerHTML=parts.join('');
+    }
+    async function load() {
+      try {
+        const response=await fetch('./data/observations.csv',{cache:'no-store'}); if(!response.ok)throw new Error(`HTTP ${response.status}`);
+        const records=csvRows(await response.text());
+        const ine=records.filter(r=>r.source==='INE'&&r.series_id==='ine_retail_sales_madrid').sort((a,b)=>a.period.localeCompare(b.period));
+        const manual=records.filter(r=>r.source.startsWith('Excel:'));
+        if(!ine.length)throw new Error('El CSV no contiene la serie INE esperada.');
+        const last=ine.at(-1); document.getElementById('latest-value').textContent=fmt(Number(last.value));
+        document.getElementById('latest-period').textContent=last.period.slice(0,7);
+        document.getElementById('period-count').textContent=String(ine.length);
+        document.getElementById('manual-status').textContent=manual.length?fmt(Number(manual.at(-1).value)):'Pendiente';
+        document.getElementById('manual-detail').textContent=manual.length?`${manual.at(-1).series_name} · ${manual.at(-1).period}`:'Añade un Excel a data/manual/';
+        document.getElementById('load-status').textContent=`Datos descargados: ${new Date(last.retrieved_at).toLocaleString('es-ES')} · ${records.length} observaciones totales.`;
+        draw(ine); document.getElementById('range').addEventListener('change',()=>draw(ine));
+      } catch(error) {
+        document.getElementById('load-status').textContent=`No se pudieron cargar los datos: ${error.message}`;
+        document.getElementById('chart').innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">Datos no disponibles.</text>';
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
