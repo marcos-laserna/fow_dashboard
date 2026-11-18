@@ -181,14 +181,16 @@ def fetch_catalog_table(catalog: dict[str, Any], retrieved_at: str, full_history
     if not isinstance(payload, list):
         raise RuntimeError(f"Formato inesperado para tabla INE {catalog['table_id']}.")
     wanted = {spec["series_id"]: spec for spec in catalog["series"]}
+    by_name = {_plain(spec["label"]): spec for spec in catalog["series"]}
     rows = []
     seen = set()
     for item in payload:
         code = str(item.get("COD", ""))
-        spec = wanted.get(code)
+        spec = wanted.get(code) or by_name.get(_plain(item.get("Nombre", "")))
         if not spec:
             continue
-        seen.add(code)
+        canonical_code = spec["series_id"]
+        seen.add(canonical_code)
         unit = spec.get("unit", "INE")
         for obs in item.get("Data", []):
             raw_date, value = obs.get("Fecha"), obs.get("Valor")
@@ -201,7 +203,7 @@ def fetch_catalog_table(catalog: dict[str, Any], retrieved_at: str, full_history
                 obs_date = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
             else:
                 obs_date = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00"))
-            rows.append({"series_id": code, "series_name": str(item.get("Nombre", spec.get("label", ""))).strip(),
+            rows.append({"series_id": canonical_code, "series_name": str(item.get("Nombre", spec.get("label", ""))).strip(),
                          "source": "INE", "period": obs_date.strftime("%Y-%m"), "value": str(value),
                          "unit": unit, "frequency": "M", "retrieved_at": retrieved_at})
     missing = set(wanted) - seen
