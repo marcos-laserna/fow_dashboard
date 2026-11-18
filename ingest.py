@@ -185,8 +185,15 @@ def fetch_catalog_series(spec: dict[str, Any], retrieved_at: str, full_history: 
     for obs in item["Data"]:
         if obs.get("Fecha") is None or obs.get("Valor") is None:
             continue
-        timestamp = float(obs["Fecha"])
-        period = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc).strftime("%Y-%m")
+        raw_date = obs["Fecha"]
+        if isinstance(raw_date, (int, float)) or str(raw_date).isdigit():
+            timestamp = float(raw_date)
+            if timestamp < 10_000_000_000:
+                timestamp *= 1000
+            obs_date = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+        else:
+            obs_date = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00"))
+        period = obs_date.strftime("%Y-%m")
         rows.append({"series_id": item.get("COD", spec["series_id"]), "series_name": item.get("Nombre", spec.get("label", "")).strip(),
                      "source": "INE", "period": period, "value": str(obs["Valor"]), "unit": unit,
                      "frequency": "M", "retrieved_at": retrieved_at})
