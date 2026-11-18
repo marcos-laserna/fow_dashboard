@@ -51,6 +51,7 @@
     .filter-note { color:var(--muted); font-size:12px; margin:0 0 8px; }
     #chart { width:100%; height:auto; min-height:250px; overflow:visible; }
     .legend { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:13px; margin-top:4px; }
+    .chart-tooltip { position:fixed; z-index:20; pointer-events:none; max-width:320px; padding:9px 11px; border:1px solid #d5deea; border-radius:8px; background:#10263f; color:#fff; box-shadow:0 5px 20px #10263f30; font-size:12px; line-height:1.45; }
     .swatch { width:10px; height:10px; border-radius:50%; background:var(--blue); }
     .status { color:var(--muted); font-size:12px; padding-top:14px; }
     .empty { fill:var(--muted); font-size:15px; }
@@ -88,7 +89,8 @@
         <fieldset><legend>Fuentes incluidas en el CSV</legend><div class="checklist" id="source-options"></div><div class="selection-tools"><button id="source-all" type="button">Marcar todas</button><button id="source-none" type="button">Desmarcar todas</button></div></fieldset>
       </div>
       <p class="filter-note">Las fechas y las casillas de series se aplican a la gráfica y a la descarga. La selección de fuentes solo afecta al CSV.</p>
-      <svg id="chart" viewBox="0 0 1000 360" role="img" aria-label="Serie temporal de ventas minoristas del INE"></svg>
+      <svg id="chart" viewBox="0 0 1000 360" role="img" aria-label="Serie temporal de indicadores del INE"></svg>
+      <div id="chart-tooltip" class="chart-tooltip" role="tooltip" hidden></div>
       <div class="legend" id="legend"></div>
       <div class="status" id="axis-note"></div>
       <div class="status" id="load-status" role="status">Cargando datos…</div>

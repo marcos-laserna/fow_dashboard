@@ -165,6 +165,11 @@
     return {min,max};
   }
 
+  function niceStep(span, targetTicks) {
+    const rough=span/targetTicks, magnitude=Math.pow(10,Math.floor(Math.log10(rough))), fraction=rough/magnitude;
+    return (fraction<=1?1:fraction<=2?2:fraction<=5?5:10)*magnitude;
+  }
+
   function draw() {
     const svg=document.getElementById('chart'),w=1000,h=360,p={l:72,r:22,t:18,b:45};
     const mode=document.getElementById('indicator').value;
@@ -182,12 +187,14 @@
     const baselines=new Map();
     if(normalized){filteredGroups.forEach(group=>{const base=group.rows.find(row=>dateNumber(row.period)>=baselineTime&&Number(row.value)!==0);if(base)baselines.set(group.name,Number(base.value));});available.forEach(item=>{const base=baselines.get(item.group.name);item.plotValue=base?item.value/base*100:item.value;});}
     else available.forEach(item=>item.plotValue=item.value);
-    const values=available.map(item=>item.plotValue),low=Math.min(...values),high=Math.max(...values),padding=(high-low||1)*.12,min=low-padding,max=high+padding;
+    const values=available.map(item=>item.plotValue),low=Math.min(...values),high=Math.max(...values),rawSpan=high-low||Math.max(Math.abs(high)*.1,1),step=niceStep(rawSpan,5),min=Math.floor(low/step)*step,max=Math.ceil(high/step)*step||min+step;
     const minTime=Math.min(...available.map(item=>item.time)),maxTime=Math.max(...available.map(item=>item.time));
     const x=t=>p.l+(t-minTime)*(w-p.l-p.r)/(maxTime-minTime||1),y=v=>h-p.b-(v-min)*(h-p.t-p.b)/(max-min||1),parts=[];
-    for(let i=0;i<5;i++){const value=min+(max-min)*i/4,yy=y(value);parts.push('<line x1="'+p.l+'" y1="'+yy+'" x2="'+(w-p.r)+'" y2="'+yy+'" stroke="#e9edf2"/><text x="'+(p.l-10)+'" y="'+(yy+4)+'" text-anchor="end" fill="#718198" font-size="12">'+fmt(value)+'</text>');}
-    for(let i=0;i<6;i++){const tickTime=minTime+(maxTime-minTime)*i/5;parts.push('<text x="'+x(tickTime)+'" y="'+(h-12)+'" text-anchor="middle" fill="#718198" font-size="12">'+new Date(tickTime).toISOString().slice(0,7)+'</text>');}
-    filteredGroups.forEach(group=>{const rows=group.rows.filter(row=>Number.isFinite(dateNumber(row.period))&&Number.isFinite(Number(row.value)));if(!rows.length)return;const base=baselines.get(group.name),safeName=escapeHtml(group.name);const points=rows.map(row=>{const value=Number(row.value),plot=normalized&&base?value/base*100:value;return x(dateNumber(row.period))+','+y(plot);}).join(' ');parts.push('<polyline points="'+points+'" fill="none" stroke="'+group.color+'" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>');const stride=Math.max(1,Math.floor(rows.length/25));rows.forEach((row,index)=>{if(index%stride===0||index===rows.length-1){const value=Number(row.value),plot=normalized&&base?value/base*100:value;parts.push('<circle cx="'+x(dateNumber(row.period))+'" cy="'+y(plot)+'" r="3.5" fill="'+group.color+'"><title>'+safeName+' · '+displayDate(row.period)+': '+fmt(value)+'</title></circle>');}});});
+    for(let value=min;value<=max+step*.001;value+=step){const yy=y(value);parts.push('<line x1="'+p.l+'" y1="'+yy+'" x2="'+(w-p.r)+'" y2="'+yy+'" stroke="#e9edf2"/><text x="'+(p.l-10)+'" y="'+(yy+4)+'" text-anchor="end" fill="#718198" font-size="12">'+fmt(value)+'</text>');}
+    const spanMonths=Math.max(1,(maxTime-minTime)/(86400000*30.4375)),tickCount=Math.min(6,Math.max(2,Math.floor(spanMonths/3)+1));
+    for(let i=0;i<tickCount;i++){const tickTime=minTime+(maxTime-minTime)*i/(tickCount-1),label=new Date(tickTime).toISOString().slice(0,7);parts.push('<line x1="'+x(tickTime)+'" y1="'+(h-p.b)+'" x2="'+x(tickTime)+'" y2="'+(h-p.b+5)+'" stroke="#718198"/><text x="'+x(tickTime)+'" y="'+(h-12)+'" text-anchor="middle" fill="#718198" font-size="12">'+label+'</text>');}
+    parts.push('<line x1="'+p.l+'" y1="'+p.t+'" x2="'+p.l+'" y2="'+(h-p.b)+'" stroke="#8b98a9"/><line x1="'+p.l+'" y1="'+(h-p.b)+'" x2="'+(w-p.r)+'" y2="'+(h-p.b)+'" stroke="#8b98a9"/>');
+    filteredGroups.forEach(group=>{const rows=group.rows.filter(row=>Number.isFinite(dateNumber(row.period))&&Number.isFinite(Number(row.value)));if(!rows.length)return;const base=baselines.get(group.name),safeName=escapeHtml(group.name);const points=rows.map(row=>{const value=Number(row.value),plot=normalized&&base?value/base*100:value;return x(dateNumber(row.period))+','+y(plot);}).join(' ');parts.push('<polyline points="'+points+'" fill="none" stroke="'+group.color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>');const stride=Math.max(1,Math.floor(rows.length/30));rows.forEach((row,index)=>{const value=Number(row.value),plot=normalized&&base?value/base*100:value,cx=x(dateNumber(row.period)),cy=y(plot),tip=safeName+' \u00b7 '+displayDate(row.period)+' \u00b7 '+fmt(value)+' '+escapeHtml(row.unit||'');parts.push('<circle class="data-point" tabindex="0" data-tip="'+tip+'" cx="'+cx+'" cy="'+cy+'" r="'+(index%stride===0||index===rows.length-1?4:6)+'" fill="'+group.color+'" fill-opacity="'+(index%stride===0||index===rows.length-1?'1':'0.01')+'" stroke="'+group.color+'" stroke-opacity="'+(index%stride===0||index===rows.length-1?'1':'0')+'"><title>'+tip+'</title></circle>');});});
     svg.innerHTML=parts.join('');
     document.getElementById('legend').innerHTML=filteredGroups.filter(group=>group.rows.length).map(group=>'<span class="swatch" style="background:'+group.color+'"></span><span>'+escapeHtml(group.name)+'</span>').join('');
     document.getElementById('axis-note').textContent=normalized?'Unidades distintas: cada serie se expresa como base 100 al inicio del intervalo.':(unitNames.values().next().value||'Valores originales');
@@ -279,6 +286,12 @@
     document.getElementById('series-none').addEventListener('click',()=>{const mode=document.getElementById('indicator').value;seriesSelectionByMode[mode]=new Set();renderSeriesOptions(mode);draw();});
     document.getElementById('source-all').addEventListener('click',()=>{document.querySelectorAll('#source-options input').forEach(input=>input.checked=true);sourceSelection.clear();document.querySelectorAll('#source-options input').forEach(input=>sourceSelection.add(input.value));});
     document.getElementById('source-none').addEventListener('click',()=>{document.querySelectorAll('#source-options input').forEach(input=>input.checked=false);sourceSelection.clear();});
+    const chart=document.getElementById('chart'),tooltip=document.getElementById('chart-tooltip');
+    const showPointTip=(event)=>{const point=event.target.closest&&event.target.closest('.data-point');if(!point)return;tooltip.textContent=point.getAttribute('data-tip');tooltip.hidden=false;tooltip.style.left=Math.min(event.clientX+14,window.innerWidth-330)+'px';tooltip.style.top=Math.max(8,event.clientY-42)+'px';};
+    chart.addEventListener('pointerover',showPointTip);chart.addEventListener('pointermove',showPointTip);
+    chart.addEventListener('pointerout',event=>{if(event.target.closest&&event.target.closest('.data-point'))tooltip.hidden=true;});
+    chart.addEventListener('focusin',event=>{const point=event.target.closest&&event.target.closest('.data-point');if(point){tooltip.textContent=point.getAttribute('data-tip');tooltip.hidden=false;const box=point.getBoundingClientRect();tooltip.style.left=Math.min(box.right+8,window.innerWidth-330)+'px';tooltip.style.top=Math.max(8,box.top-35)+'px';}});
+    chart.addEventListener('focusout',()=>{tooltip.hidden=true;});
     document.getElementById('refresh').addEventListener('click',refreshIne);
     document.getElementById('download').addEventListener('click',downloadCsv);
   }
