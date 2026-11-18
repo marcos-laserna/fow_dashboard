@@ -84,28 +84,28 @@
 
   function shortSeriesName(fullName) {
     const parts=String(fullName||'').split('.').map(part=>part.trim()).filter(Boolean);
-    let territory=parts.shift()||'Espa?a';
-    if(['Total Nacional','Nacional','Espa?a'].includes(territory))territory='Espa?a';
+    let territory=parts.shift()||'Espa\u00f1a';
+    if(['Total Nacional','Nacional','Espa\u00f1a'].includes(territory))territory='Espa\u00f1a';
     let measure='';
     const source=parts.join(' ').toLocaleLowerCase('es');
     if(source.includes('precios constantes'))measure='Ventas reales';
     else if(source.includes('precios corrientes'))measure='Ventas nominales';
-    else if(source.includes('ocupaci'))measure='Ocupaci?n';
+    else if(source.includes('ocupaci'))measure='Ocupaci\u00f3n';
     else if(source.includes('cifra de negocio'))measure='Ventas';
-    let dimension=parts.find(part=>/^(general|alimentos|bebidas|vestido|vivienda|muebles|sanidad|transporte|comunicaciones|ocio|ense?anza|restaurantes|hoteles|otros bienes|alimentaci?n|resto|equipo personal|equipamiento del hogar)/i.test(part));
-    const statistic=parts.find(part=>/?ndice|variaci?n/i.test(part))||'';
-    const shortStatistic=statistic.toLocaleLowerCase('es').includes('variaci?n mensual')?'Cambio mensual':statistic.toLocaleLowerCase('es').includes('variaci?n anual')?'Cambio anual':statistic.toLocaleLowerCase('es').includes('media en lo que va')?'Acumulado anual':statistic.toLocaleLowerCase('es').includes('variaci?n')?'Variaci?n':'?ndice';
+    let dimension=parts.find(part=>/^(general|alimentos|bebidas|vestido|vivienda|muebles|sanidad|transporte|comunicaciones|ocio|ense\u00f1anza|restaurantes|hoteles|otros bienes|alimentaci\u00f3n|resto|equipo personal|equipamiento del hogar)/i.test(part));
+    const statistic=parts.find(part=>/\u00edndice|variaci\u00f3n/i.test(part))||'';
+    const shortStatistic=statistic.toLocaleLowerCase('es').includes('variaci\u00f3n mensual')?'Cambio mensual':statistic.toLocaleLowerCase('es').includes('variaci\u00f3n anual')?'Cambio anual':statistic.toLocaleLowerCase('es').includes('media en lo que va')?'Acumulado anual':statistic.toLocaleLowerCase('es').includes('variaci\u00f3n')?'Variaci\u00f3n':'\u00cdndice';
     const detail=[territory,measure,dimension&&dimension!=='General'?dimension:null,shortStatistic].filter(Boolean);
-    return detail.join(' ? ');
+    return detail.join(' \u00b7 ');
   }
 
   function statisticName(fullName) {
     const text=String(fullName||'').toLocaleLowerCase('es');
-    if(text.includes('variaci?n mensual'))return 'Variaci?n mensual';
-    if(text.includes('variaci?n anual'))return 'Variaci?n anual';
-    if(text.includes('media en lo que va')||text.includes('lo que va de a?o'))return 'Variaci?n acumulada anual';
-    if(text.includes('variaci?n'))return 'Variaci?n';
-    if(text.includes('?ndice'))return '?ndice';
+    if(text.includes('variaci\u00f3n mensual'))return 'Variaci\u00f3n mensual';
+    if(text.includes('variaci\u00f3n anual'))return 'Variaci\u00f3n anual';
+    if(text.includes('media en lo que va')||text.includes('lo que va de a\u00f1o'))return 'Variaci\u00f3n acumulada anual';
+    if(text.includes('variaci\u00f3n'))return 'Variaci?n';
+    if(text.includes('\u00edndice'))return '\u00cdndice';
     return 'Valor';
   }
 
@@ -131,10 +131,10 @@
       return '<label class="check-option" title="'+escapeHtml(item.name)+'"><input class="series-option" type="checkbox" value="'+escapeHtml(item.key)+'"'+(checked?' checked':'')+'> <span>'+escapeHtml(label)+'</span></label>';
     };
     document.getElementById('series-options').innerHTML=visible.map(([base,items])=>isCatalog
-      ?'<details class="series-group"><summary>'+escapeHtml(shortSeriesName(base))+' <span>'+items.length+' c?lculos</span></summary><div class="series-children">'+items.map(renderOption).join('')+'</div></details>'
+      ?'<details class="series-group"><summary>'+escapeHtml(shortSeriesName(base))+' <span>'+items.length+' c\u00e1lculos</span></summary><div class="series-children">'+items.map(renderOption).join('')+'</div></details>'
       :items.map(renderOption).join('')).join('');
     const selected=Array.from(document.querySelectorAll('#series-options input:checked')).length;
-    document.getElementById('series-count').textContent=(query?visible.length+' grupos de '+entries.length:entries.length+' grupos')+' ? '+series.length+' series ? '+selected+' seleccionadas';
+    document.getElementById('series-count').textContent=(query?visible.length+' grupos de '+entries.length:entries.length+' grupos')+' \u00b7 '+series.length+' series \u00b7 '+selected+' seleccionadas';
     seriesSelectionByMode[mode+'_known']=new Set(series.map(item=>item.key));
     activeSeriesMode=mode;
   }
@@ -169,7 +169,7 @@
     const svg=document.getElementById('chart'),w=1000,h=360,p={l:72,r:22,t:18,b:45};
     const mode=document.getElementById('indicator').value;
     const groups=selectedGroups();
-    const titles={ipc:['IPC ? precios y grupos de consumo','Cat?logo nacional del IPC: ?ndices y variaciones.'],icm:['ICM ? comercio minorista','Cat?logo nacional del comercio minorista: ?ndices y tasas.'],retail:['Ventas minoristas — Madrid','INE · Madrid. Marca una serie manual para compararla si quieres.'],iass:['Indicador de actividad del sector servicios (IASS)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],ipi:['Índice de producción industrial (IPI)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],other:['Excel y otras fuentes','Series cargadas manualmente y bases adicionales, como Datacomex cuando se incorpore.']};
+    const titles={ipc:['IPC \u00b7 precios y grupos de consumo','Cat\u00e1logo nacional del IPC: \u00edndices y variaciones.'],icm:['ICM \u00b7 comercio minorista','Cat\u00e1logo nacional del comercio minorista: \u00edndices y tasas.'],retail:['Ventas minoristas \u2014 Madrid','INE \u00b7 Madrid. Marca una serie manual para compararla si quieres.'],iass:['Indicador de actividad del sector servicios (IASS)','Tres versiones del \u00edndice general: original, ajustado de calendario y CVEC'],ipi:['\u00cdndice de producci\u00f3n industrial (IPI)','Tres versiones del \u00edndice general: original, ajustado de calendario y CVEC'],other:['Excel y otras fuentes','Series cargadas manualmente y bases adicionales.']};
     document.getElementById('chart-title').textContent=titles[mode][0];document.getElementById('chart-description').textContent=titles[mode][1];
     const all=groups.flatMap(group=>group.rows.map(row=>({row,time:dateNumber(row.period),value:Number(row.value)}))).filter(item=>Number.isFinite(item.time)&&Number.isFinite(item.value));
     if(!all.length){svg.innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">No hay observaciones para mostrar.</text>';return;}
