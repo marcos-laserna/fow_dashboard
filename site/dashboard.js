@@ -171,7 +171,7 @@
   }
 
   function draw() {
-    const svg=document.getElementById('chart'),w=1000,h=360,p={l:72,r:22,t:18,b:45};
+    const svg=document.getElementById('chart'),w=1000,h=360,p={l:76,r:78,t:18,b:45};
     const mode=document.getElementById('indicator').value;
     const groups=selectedGroups();
     const titles={ipc:['IPC \u00b7 precios y grupos de consumo','Cat\u00e1logo nacional del IPC: \u00edndices y variaciones.'],icm:['ICM \u00b7 comercio minorista','Cat\u00e1logo nacional del comercio minorista: \u00edndices y tasas.'],retail:['Ventas minoristas \u2014 Madrid','INE \u00b7 Madrid. Marca una serie manual para compararla si quieres.'],iass:['Indicador de actividad del sector servicios (IASS)','Tres versiones del \u00edndice general: original, ajustado de calendario y CVEC'],ipi:['\u00cdndice de producci\u00f3n industrial (IPI)','Tres versiones del \u00edndice general: original, ajustado de calendario y CVEC'],other:['Excel y otras fuentes','Series cargadas manualmente y bases adicionales.']};
@@ -182,21 +182,25 @@
     const filteredGroups=groups.map(group=>({...group,rows:group.rows.filter(row=>{const t=dateNumber(row.period);return t>=bounds.min&&t<=bounds.max;}).sort((a,b)=>dateNumber(a.period)-dateNumber(b.period))}));
     const available=filteredGroups.flatMap(group=>group.rows.map(row=>({row,time:dateNumber(row.period),value:Number(row.value),group}))).filter(item=>Number.isFinite(item.time)&&Number.isFinite(item.value));
     if(!available.length){svg.innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">No hay observaciones en este intervalo.</text>';return;}
-    const unitNames=new Set(available.map(item=>item.row.unit).filter(Boolean)),normalized=unitNames.size>1||available.some(item=>!item.row.unit);
-    const baselines=new Map();
-    if(normalized){filteredGroups.forEach(group=>{const base=group.rows.find(row=>Number.isFinite(Number(row.value)));if(base)baselines.set(group.name,{value:Number(base.value),unit:String(base.unit||'').toLocaleLowerCase('es')});});available.forEach(item=>{const baseline=baselines.get(item.group.name);if(!baseline){item.plotValue=item.value;return;}const isRate=baseline.unit.includes('porcentaje')||baseline.unit.includes('%')||baseline.unit.includes('tasa');item.plotValue=isRate?100+(item.value-baseline.value):(baseline.value!==0?item.value/baseline.value*100:100+item.value);});}
-    else available.forEach(item=>item.plotValue=item.value);
-    const values=available.map(item=>item.plotValue),low=Math.min(...values),high=Math.max(...values),rawSpan=high-low||Math.max(Math.abs(high)*.1,1),step=niceStep(rawSpan,5),min=Math.floor(low/step)*step,max=Math.ceil(high/step)*step; if(max<=min)max=min+step;
+    const unitNames=Array.from(new Set(available.map(item=>item.row.unit||'Valor')));
+    const leftUnit=unitNames[0],rightUnit=unitNames[1]||null;
+    const axisFor=item=>(item.row.unit||'Valor')===leftUnit?'left':'right';
+    const byAxis={left:available.filter(item=>axisFor(item)==='left').map(item=>item.value),right:available.filter(item=>axisFor(item)==='right').map(item=>item.value)};
+    const scaleFor=values=>{const low=Math.min(...values),high=Math.max(...values),span=high-low||Math.max(Math.abs(high)*.1,1),step=niceStep(span,5);let min=Math.floor(low/step)*step,max=Math.ceil(high/step)*step;if(max<=min)max=min+step;return {min,max,step};};
+    const leftScale=scaleFor(byAxis.left),rightScale=byAxis.right.length?scaleFor(byAxis.right):null;
     const minTime=Math.min(...available.map(item=>item.time)),maxTime=Math.max(...available.map(item=>item.time));
-    const x=t=>p.l+(t-minTime)*(w-p.l-p.r)/(maxTime-minTime||1),y=v=>h-p.b-(v-min)*(h-p.t-p.b)/(max-min||1),parts=[];
-    for(let value=min;value<=max+step*.001;value+=step){const yy=y(value);parts.push('<line x1="'+p.l+'" y1="'+yy+'" x2="'+(w-p.r)+'" y2="'+yy+'" stroke="#e9edf2"/><text x="'+(p.l-10)+'" y="'+(yy+4)+'" text-anchor="end" fill="#718198" font-size="12">'+fmt(value)+'</text>');}
+    const x=t=>p.l+(t-minTime)*(w-p.l-p.r)/(maxTime-minTime||1);
+    const y=(value,axis)=>{const scale=axis==='right'&&rightScale?rightScale:leftScale;return h-p.b-(value-scale.min)*(h-p.t-p.b)/(scale.max-scale.min||1);};
+    const parts=[];
+    for(let value=leftScale.min;value<=leftScale.max+leftScale.step*.001;value+=leftScale.step){const yy=y(value,'left');parts.push('<line x1="'+p.l+'" y1="'+yy+'" x2="'+(w-p.r)+'" y2="'+yy+'" stroke="#e9edf2"/><text x="'+(p.l-10)+'" y="'+(yy+4)+'" text-anchor="end" fill="#718198" font-size="12">'+fmt(value)+'</text>');}
+    if(rightScale){for(let value=rightScale.min;value<=rightScale.max+rightScale.step*.001;value+=rightScale.step){const yy=y(value,'right');parts.push('<text x="'+(w-p.r+9)+'" y="'+(yy+4)+'" text-anchor="start" fill="#718198" font-size="12">'+fmt(value)+'</text>');}}
     const spanMonths=Math.max(1,(maxTime-minTime)/(86400000*30.4375)),tickCount=Math.min(6,Math.max(2,Math.floor(spanMonths/3)+1));
     for(let i=0;i<tickCount;i++){const tickTime=minTime+(maxTime-minTime)*i/(tickCount-1),label=new Date(tickTime).toISOString().slice(0,7);parts.push('<line x1="'+x(tickTime)+'" y1="'+(h-p.b)+'" x2="'+x(tickTime)+'" y2="'+(h-p.b+5)+'" stroke="#718198"/><text x="'+x(tickTime)+'" y="'+(h-12)+'" text-anchor="middle" fill="#718198" font-size="12">'+label+'</text>');}
-    parts.push('<line x1="'+p.l+'" y1="'+p.t+'" x2="'+p.l+'" y2="'+(h-p.b)+'" stroke="#8b98a9"/><line x1="'+p.l+'" y1="'+(h-p.b)+'" x2="'+(w-p.r)+'" y2="'+(h-p.b)+'" stroke="#8b98a9"/>');
-    filteredGroups.forEach(group=>{const rows=group.rows.filter(row=>Number.isFinite(dateNumber(row.period))&&Number.isFinite(Number(row.value)));if(!rows.length)return;const baseline=baselines.get(group.name),isRate=baseline&&(baseline.unit.includes('porcentaje')||baseline.unit.includes('%')||baseline.unit.includes('tasa')),plot=row=>{const value=Number(row.value);return normalized&&baseline?(isRate?100+(value-baseline.value):(baseline.value!==0?value/baseline.value*100:100+value)):value;},safeName=escapeHtml(group.name);const points=rows.map(row=>x(dateNumber(row.period))+','+y(plot(row))).join(' ');parts.push('<polyline points="'+points+'" fill="none" stroke="'+group.color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>');rows.forEach(row=>{const value=Number(row.value),plotValue=plot(row),cx=x(dateNumber(row.period)),cy=y(plotValue),tip=safeName+' \u00b7 '+displayDate(row.period)+' \u00b7 valor: '+fmt(value)+' '+escapeHtml(row.unit||'')+(normalized?' \u00b7 escala gr\u00e1fica: '+fmt(plotValue)+' (base 100)':'');parts.push('<circle class="data-point" tabindex="0" data-tip="'+tip+'" cx="'+cx+'" cy="'+cy+'" r="10" fill="'+group.color+'" fill-opacity="0.025" stroke="'+group.color+'" stroke-opacity="0"><title>'+tip+'</title></circle>');});});
+    parts.push('<line x1="'+p.l+'" y1="'+p.t+'" x2="'+p.l+'" y2="'+(h-p.b)+'" stroke="#8b98a9"/><line x1="'+(w-p.r)+'" y1="'+p.t+'" x2="'+(w-p.r)+'" y2="'+(h-p.b)+'" stroke="#8b98a9"/><line x1="'+p.l+'" y1="'+(h-p.b)+'" x2="'+(w-p.r)+'" y2="'+(h-p.b)+'" stroke="#8b98a9"/>');
+    filteredGroups.forEach(group=>{const rows=group.rows.filter(row=>Number.isFinite(dateNumber(row.period))&&Number.isFinite(Number(row.value)));if(!rows.length)return;const axis=(rows[0].unit||'Valor')===leftUnit?'left':'right',safeName=escapeHtml(group.name),points=rows.map(row=>x(dateNumber(row.period))+','+y(Number(row.value),axis)).join(' ');parts.push('<polyline points="'+points+'" fill="none" stroke="'+group.color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>');rows.forEach(row=>{const value=Number(row.value),cx=x(dateNumber(row.period)),cy=y(value,axis),tip=safeName+' ? '+displayDate(row.period)+' ? '+fmt(value)+' '+escapeHtml(row.unit||'');parts.push('<circle class="data-point" tabindex="0" data-tip="'+tip+'" cx="'+cx+'" cy="'+cy+'" r="10" fill="'+group.color+'" fill-opacity="0.025" stroke="'+group.color+'" stroke-opacity="0"><title>'+tip+'</title></circle>');});});
     svg.innerHTML=parts.join('');
     document.getElementById('legend').innerHTML=filteredGroups.filter(group=>group.rows.length).map(group=>'<span class="swatch" style="background:'+group.color+'"></span><span>'+escapeHtml(group.name)+'</span>').join('');
-    document.getElementById('axis-note').textContent=normalized?'El eje Y muestra una escala com?n base 100 desde el primer dato visible de cada serie; los porcentajes se reexpresan como cambio desde ese punto.':(unitNames.values().next().value||'Valores originales');
+    document.getElementById('axis-note').textContent=rightUnit?'Eje izquierdo: '+leftUnit+' \u00b7 Eje derecho: '+rightUnit:(leftUnit||'Valores originales');
   }
 
   function refreshViewStatus(message) {
