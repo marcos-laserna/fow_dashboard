@@ -165,39 +165,49 @@ def fetch_ine_automation(ine: dict[str, Any], retrieved_at: str) -> list[dict[st
     return rows
 
 
-def fetch_catalog_series(spec: dict[str, Any], retrieved_at: str, full_history: bool = False) -> list[dict[str, str]]:
-    """Fetch every Tempus3 series in a configured table and normalize observations."""
+def fetch_catalog_table(catalog: dict[str, Any], retrieved_at: str, full_history: bool = False) -> list[dict[str, str]]:
+    """Fetch one INE table and retain the series listed in its supplied catalog."""
     params = {"tip": "AM"}
     if not full_history:
         params["nult"] = 3
     query = urllib.parse.urlencode(params)
-    url = f"https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/{spec['series_id']}?{query}"
+    url = f"https://servicios.ine.es/wstempus/js/ES/DATOS_TABLA/{catalog['table_id']}?{query}"
     request = urllib.request.Request(url, headers={"User-Agent": "FutureOfWorkData/1.0"})
     try:
-        with urllib.request.urlopen(request, timeout=60) as response:
-            item = json.load(response)
+        with urllib.request.urlopen(request, timeout=90) as response:
+            payload = json.load(response)
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"No se pudo descargar la serie INE {spec['series_id']}: {exc}") from exc
-    if not isinstance(item, dict) or not isinstance(item.get("Data"), list):
-        raise RuntimeError(f"Formato inesperado para serie INE {spec['series_id']}.")
-    unit = "Índice" if item.get("FK_Unidad") == 133 else "Porcentaje" if item.get("FK_Unidad") == 135 else "INE"
+        raise RuntimeError(f"No se pudo descargar la tabla INE {catalog['table_id']}: {exc}") from exc
+    if not isinstance(payload, list):
+        raise RuntimeError(f"Formato inesperado para tabla INE {catalog['table_id']}.")
+    wanted = {spec["series_id"]: spec for spec in catalog["series"]}
     rows = []
-    for obs in item["Data"]:
-        if obs.get("Fecha") is None or obs.get("Valor") is None:
+    seen = set()
+    for item in payload:
+        code = str(item.get("COD", ""))
+        spec = wanted.get(code)
+        if not spec:
             continue
-        raw_date = obs["Fecha"]
-        if isinstance(raw_date, (int, float)) or str(raw_date).isdigit():
-            timestamp = float(raw_date)
-            if timestamp < 10_000_000_000:
-                timestamp *= 1000
-            obs_date = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
-        else:
-            obs_date = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00"))
-        period = obs_date.strftime("%Y-%m")
-        rows.append({"series_id": item.get("COD", spec["series_id"]), "series_name": item.get("Nombre", spec.get("label", "")).strip(),
-                     "source": "INE", "period": period, "value": str(obs["Valor"]), "unit": unit,
-                     "frequency": "M", "retrieved_at": retrieved_at})
-    time.sleep(0.15)
+        seen.add(code)
+        unit = spec.get("unit", "INE")
+        for obs in item.get("Data", []):
+            raw_date, value = obs.get("Fecha"), obs.get("Valor")
+            if raw_date is None or value is None or value == "..":
+                continue
+            if isinstance(raw_date, (int, float)) or str(raw_date).isdigit():
+                timestamp = float(raw_date)
+                if timestamp < 10_000_000_000:
+                    timestamp *= 1000
+                obs_date = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+            else:
+                obs_date = datetime.fromisoformat(str(raw_date).replace("Z", "+00:00"))
+            rows.append({"series_id": code, "series_name": str(item.get("Nombre", spec.get("label", ""))).strip(),
+                         "source": "INE", "period": obs_date.strftime("%Y-%m"), "value": str(value),
+                         "unit": unit, "frequency": "M", "retrieved_at": retrieved_at})
+    missing = set(wanted) - seen
+    if missing:
+        raise RuntimeError(f"La tabla INE {catalog['table_id']} no devolvi? {len(missing)} c?digos del cat?logo: {sorted(missing)[:5]}")
+    time.sleep(0.5)
     return rows
 
 
@@ -287,8 +297,7 @@ def main() -> None:
     # keep responses bounded and allow GitHub Actions to retry individual failures.
     full_history = os.environ.get("INE_FULL_HISTORY", "0").lower() in {"1", "true", "yes"}
     for catalog in config.get("ine_catalogs", []):
-        for spec in catalog["series"]:
-            rows.extend(fetch_catalog_series({**spec, "family": catalog["family"]}, retrieved_at, full_history))
+        rows.extend(fetch_catalog_table(catalog, retrieved_at, full_history))
     rows.extend(read_manual_files(config, retrieved_at))
     updated = merge_write(rows)
     print(f"Observaciones recibidas: {updated}")

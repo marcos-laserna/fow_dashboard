@@ -77,6 +77,7 @@
   ],
   "ine_catalogs": [
     {
+      "table_id": "76125",
       "family": "ipc",
       "series": [
         {
@@ -394,6 +395,7 @@
       ]
     },
     {
+      "table_id": "75808",
       "family": "icm",
       "series": [
         {
