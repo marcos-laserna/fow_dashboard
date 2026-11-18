@@ -8,12 +8,1356 @@
     "frequency": "M"
   },
   "ine_automation": [
-    {"table_id":"60288","series_id":"ine_iass_raw","label":"IASS · Original (60288)","family":"iass","match_any":["indice general","total servicios","sector servicios de mercado"]},
-    {"table_id":"60289","series_id":"ine_iass_wda","label":"IASS · Ajustado calendario (60289)","family":"iass","match_any":["indice general","total servicios","sector servicios de mercado"]},
-    {"table_id":"60290","series_id":"ine_iass_cvec","label":"IASS · Ajustado calendario y estacionalidad (60290)","family":"iass","match_any":["indice general","total servicios","sector servicios de mercado"]},
-    {"table_id":"60272","series_id":"ine_ipi_raw","label":"IPI · Original (60272)","family":"ipi","match_any":["total industria","indice general","general"]},
-    {"table_id":"60276","series_id":"ine_ipi_wda","label":"IPI · Ajustado calendario (60276)","family":"ipi","match_any":["total industria","indice general","general"]},
-    {"table_id":"60280","series_id":"ine_ipi_cvec","label":"IPI · Ajustado calendario y estacionalidad (60280)","family":"ipi","match_any":["total industria","indice general","general"]}
+    {
+      "table_id": "60288",
+      "series_id": "ine_iass_raw",
+      "label": "IASS · Original (60288)",
+      "family": "iass",
+      "match_any": [
+        "indice general",
+        "total servicios",
+        "sector servicios de mercado"
+      ]
+    },
+    {
+      "table_id": "60289",
+      "series_id": "ine_iass_wda",
+      "label": "IASS · Ajustado calendario (60289)",
+      "family": "iass",
+      "match_any": [
+        "indice general",
+        "total servicios",
+        "sector servicios de mercado"
+      ]
+    },
+    {
+      "table_id": "60290",
+      "series_id": "ine_iass_cvec",
+      "label": "IASS · Ajustado calendario y estacionalidad (60290)",
+      "family": "iass",
+      "match_any": [
+        "indice general",
+        "total servicios",
+        "sector servicios de mercado"
+      ]
+    },
+    {
+      "table_id": "60272",
+      "series_id": "ine_ipi_raw",
+      "label": "IPI · Original (60272)",
+      "family": "ipi",
+      "match_any": [
+        "total industria",
+        "indice general",
+        "general"
+      ]
+    },
+    {
+      "table_id": "60276",
+      "series_id": "ine_ipi_wda",
+      "label": "IPI · Ajustado calendario (60276)",
+      "family": "ipi",
+      "match_any": [
+        "total industria",
+        "indice general",
+        "general"
+      ]
+    },
+    {
+      "table_id": "60280",
+      "series_id": "ine_ipi_cvec",
+      "label": "IPI · Ajustado calendario y estacionalidad (60280)",
+      "family": "ipi",
+      "match_any": [
+        "total industria",
+        "indice general",
+        "general"
+      ]
+    }
+  ],
+  "ine_catalogs": [
+    {
+      "family": "ipc",
+      "series": [
+        {
+          "series_id": "IPC251852",
+          "label": "Nacional. Índice general. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251855",
+          "label": "Nacional. Índice general. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251856",
+          "label": "Nacional. Índice general. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251858",
+          "label": "Nacional. Índice general. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251859",
+          "label": "Nacional. Alimentos y bebidas no alcohólicas. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251861",
+          "label": "Nacional. Alimentos y bebidas no alcohólicas. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251862",
+          "label": "Nacional. Alimentos y bebidas no alcohólicas. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251863",
+          "label": "Nacional. Alimentos y bebidas no alcohólicas. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251864",
+          "label": "Nacional. Bebidas alcohólicas y tabaco. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251866",
+          "label": "Nacional. Bebidas alcohólicas y tabaco. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251867",
+          "label": "Nacional. Bebidas alcohólicas y tabaco. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251868",
+          "label": "Nacional. Bebidas alcohólicas y tabaco. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251869",
+          "label": "Nacional. Vestido y calzado. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251871",
+          "label": "Nacional. Vestido y calzado. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251872",
+          "label": "Nacional. Vestido y calzado. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251873",
+          "label": "Nacional. Vestido y calzado. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251874",
+          "label": "Nacional. Vivienda, agua, electricidad, gas y otros combustibles. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251876",
+          "label": "Nacional. Vivienda, agua, electricidad, gas y otros combustibles. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251877",
+          "label": "Nacional. Vivienda, agua, electricidad, gas y otros combustibles. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251878",
+          "label": "Nacional. Vivienda, agua, electricidad, gas y otros combustibles. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251879",
+          "label": "Nacional. Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251881",
+          "label": "Nacional. Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251882",
+          "label": "Nacional. Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251883",
+          "label": "Nacional. Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251884",
+          "label": "Nacional. Sanidad. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251886",
+          "label": "Nacional. Sanidad. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251887",
+          "label": "Nacional. Sanidad. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251888",
+          "label": "Nacional. Sanidad. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251889",
+          "label": "Nacional. Transporte. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251891",
+          "label": "Nacional. Transporte. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251892",
+          "label": "Nacional. Transporte. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251893",
+          "label": "Nacional. Transporte. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251894",
+          "label": "Nacional. Comunicaciones. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251896",
+          "label": "Nacional. Comunicaciones. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251897",
+          "label": "Nacional. Comunicaciones. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251898",
+          "label": "Nacional. Comunicaciones. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251899",
+          "label": "Nacional. Ocio y cultura. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251901",
+          "label": "Nacional. Ocio y cultura. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251902",
+          "label": "Nacional. Ocio y cultura. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251903",
+          "label": "Nacional. Ocio y cultura. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251904",
+          "label": "Nacional. Enseñanza. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251906",
+          "label": "Nacional. Enseñanza. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251840",
+          "label": "Nacional. Enseñanza. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251841",
+          "label": "Nacional. Enseñanza. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251842",
+          "label": "Nacional. Restaurantes y hoteles. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251844",
+          "label": "Nacional. Restaurantes y hoteles. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251845",
+          "label": "Nacional. Restaurantes y hoteles. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251846",
+          "label": "Nacional. Restaurantes y hoteles. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251847",
+          "label": "Nacional. Otros bienes y servicios. Índice.",
+          "unit": "?ndice",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251849",
+          "label": "Nacional. Otros bienes y servicios. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251850",
+          "label": "Nacional. Otros bienes y servicios. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        },
+        {
+          "series_id": "IPC251851",
+          "label": "Nacional. Otros bienes y servicios. Variación en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "ipc"
+        }
+      ]
+    },
+    {
+      "family": "icm",
+      "series": [
+        {
+          "series_id": "ICM3821",
+          "label": "Total Nacional. Cifra de negocio a precios constantes. General. Comercio al por menor, excepto de vehículos de motor y motocicletas. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM3860",
+          "label": "Total Nacional. Cifra de negocio a precios constantes. General. Comercio al por menor, excepto de vehículos de motor y motocicletas. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM3859",
+          "label": "Total Nacional. Cifra de negocio a precios constantes. General. Comercio al por menor, excepto de vehículos de motor y motocicletas. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM3858",
+          "label": "Total Nacional. Cifra de negocio a precios constantes. General. Comercio al por menor, excepto de vehículos de motor y motocicletas. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM3790",
+          "label": "Total Nacional. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM3808",
+          "label": "Total Nacional. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM3807",
+          "label": "Total Nacional. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM3806",
+          "label": "Total Nacional. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4441",
+          "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4555",
+          "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4554",
+          "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4553",
+          "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4440",
+          "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4552",
+          "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4551",
+          "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4550",
+          "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4439",
+          "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4549",
+          "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4548",
+          "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4547",
+          "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4438",
+          "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4546",
+          "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4545",
+          "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4544",
+          "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4437",
+          "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4543",
+          "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4542",
+          "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4541",
+          "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4436",
+          "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4540",
+          "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4539",
+          "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4538",
+          "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4435",
+          "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4537",
+          "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4536",
+          "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4535",
+          "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4434",
+          "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4534",
+          "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4533",
+          "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4532",
+          "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4433",
+          "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4531",
+          "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4530",
+          "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4529",
+          "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4432",
+          "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4528",
+          "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4527",
+          "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4526",
+          "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4431",
+          "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4525",
+          "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4524",
+          "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4523",
+          "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4430",
+          "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4522",
+          "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4521",
+          "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4520",
+          "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4429",
+          "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4519",
+          "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4518",
+          "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4517",
+          "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4428",
+          "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4516",
+          "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4515",
+          "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4514",
+          "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4427",
+          "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4513",
+          "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4512",
+          "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4511",
+          "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4426",
+          "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4510",
+          "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4509",
+          "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4508",
+          "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4425",
+          "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4507",
+          "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4506",
+          "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4505",
+          "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4424",
+          "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4504",
+          "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4503",
+          "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4502",
+          "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4423",
+          "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4501",
+          "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4500",
+          "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4499",
+          "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4422",
+          "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4498",
+          "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4497",
+          "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4496",
+          "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4421",
+          "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4495",
+          "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4494",
+          "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4493",
+          "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4420",
+          "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4492",
+          "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4491",
+          "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4490",
+          "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4419",
+          "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4489",
+          "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4488",
+          "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4487",
+          "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4418",
+          "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4486",
+          "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4485",
+          "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4484",
+          "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4417",
+          "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4483",
+          "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4482",
+          "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4481",
+          "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4416",
+          "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4480",
+          "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4479",
+          "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4478",
+          "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4415",
+          "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4477",
+          "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4476",
+          "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4475",
+          "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4414",
+          "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4474",
+          "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4473",
+          "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4472",
+          "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4413",
+          "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4471",
+          "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4470",
+          "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4469",
+          "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4412",
+          "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4468",
+          "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4467",
+          "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4466",
+          "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4411",
+          "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4465",
+          "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4464",
+          "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4463",
+          "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4410",
+          "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4462",
+          "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4461",
+          "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4460",
+          "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4409",
+          "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4459",
+          "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4458",
+          "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4457",
+          "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4408",
+          "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4456",
+          "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4455",
+          "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4454",
+          "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4407",
+          "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4453",
+          "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4452",
+          "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4451",
+          "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4406",
+          "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4450",
+          "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4449",
+          "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4448",
+          "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4405",
+          "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4447",
+          "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4446",
+          "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4445",
+          "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4404",
+          "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
+          "unit": "?ndice",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4444",
+          "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación mensual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4443",
+          "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación anual.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        },
+        {
+          "series_id": "ICM4442",
+          "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Variación de la media en lo que va de año.",
+          "unit": "Porcentaje",
+          "family": "icm"
+        }
+      ]
+    }
   ],
   "manual": {
     "default_series_id": "manual_series",

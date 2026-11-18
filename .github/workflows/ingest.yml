@@ -2,6 +2,12 @@ name: Ingest data
 
 on:
   workflow_dispatch:
+    inputs:
+      full_history:
+        description: 'Descargar el histórico completo de IPC e ICM'
+        required: true
+        type: boolean
+        default: false
   schedule:
     # Check once per day. The INE publishes this indicator monthly.
     - cron: "17 6 * * *"
@@ -29,6 +35,8 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
       - name: Download INE data and ingest manual files
+        env:
+          INE_FULL_HISTORY: ${{ github.event_name == 'workflow_dispatch' && inputs.full_history && '1' || '0' }}
         run: python ingest.py
       - name: Save updated dataset
         run: |

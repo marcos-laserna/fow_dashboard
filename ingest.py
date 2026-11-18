@@ -6,6 +6,8 @@ from __future__ import annotations
 import csv
 import json
 import re
+import os
+import time
 import unicodedata
 import urllib.error
 import urllib.parse
@@ -163,6 +165,35 @@ def fetch_ine_automation(ine: dict[str, Any], retrieved_at: str) -> list[dict[st
     return rows
 
 
+def fetch_catalog_series(spec: dict[str, Any], retrieved_at: str, full_history: bool = False) -> list[dict[str, str]]:
+    """Fetch every Tempus3 series in a configured table and normalize observations."""
+    params = {"tip": "AM"}
+    if not full_history:
+        params["nult"] = 3
+    query = urllib.parse.urlencode(params)
+    url = f"https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/{spec['series_id']}?{query}"
+    request = urllib.request.Request(url, headers={"User-Agent": "FutureOfWorkData/1.0"})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            item = json.load(response)
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"No se pudo descargar la serie INE {spec['series_id']}: {exc}") from exc
+    if not isinstance(item, dict) or not isinstance(item.get("Data"), list):
+        raise RuntimeError(f"Formato inesperado para serie INE {spec['series_id']}.")
+    unit = "Índice" if item.get("FK_Unidad") == 133 else "Porcentaje" if item.get("FK_Unidad") == 135 else "INE"
+    rows = []
+    for obs in item["Data"]:
+        if obs.get("Fecha") is None or obs.get("Valor") is None:
+            continue
+        timestamp = float(obs["Fecha"])
+        period = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc).strftime("%Y-%m")
+        rows.append({"series_id": item.get("COD", spec["series_id"]), "series_name": item.get("Nombre", spec.get("label", "")).strip(),
+                     "source": "INE", "period": period, "value": str(obs["Valor"]), "unit": unit,
+                     "frequency": "M", "retrieved_at": retrieved_at})
+    time.sleep(0.15)
+    return rows
+
+
 def read_manual_files(settings: dict[str, Any], retrieved_at: str) -> list[dict[str, str]]:
     manual = settings["manual"]
     rows: list[dict[str, str]] = []
@@ -245,6 +276,12 @@ def main() -> None:
     rows = fetch_ine(config["ine"], retrieved_at)
     for ine in config.get("ine_automation", []):
         rows.extend(fetch_ine_automation(ine, retrieved_at))
+    # Full catalogs can be refreshed on schedule; process one series per request to
+    # keep responses bounded and allow GitHub Actions to retry individual failures.
+    full_history = os.environ.get("INE_FULL_HISTORY", "0").lower() in {"1", "true", "yes"}
+    for catalog in config.get("ine_catalogs", []):
+        for spec in catalog["series"]:
+            rows.extend(fetch_catalog_series({**spec, "family": catalog["family"]}, retrieved_at, full_history))
     rows.extend(read_manual_files(config, retrieved_at))
     updated = merge_write(rows)
     print(f"Observaciones recibidas: {updated}")

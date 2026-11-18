@@ -64,6 +64,12 @@
     const colors={ine_iass_raw:'#2463eb',ine_iass_wda:'#0c9488',ine_iass_cvec:'#d97706',ine_ipi_raw:'#2463eb',ine_ipi_wda:'#0c9488',ine_ipi_cvec:'#d97706'};
     let groups=[];
     if(mode==='retail')groups=[{key:INE_ID,name:'INE · Madrid',rows:ine,color:'#2463eb'}];
+    else if(mode==='ipc'||mode==='icm'){
+      const subset=currentRows.filter(row=>row.source==='INE'&&row.series_id.startsWith(mode.toUpperCase()));
+      const bySeries=new Map();subset.forEach(row=>{if(!bySeries.has(row.series_id))bySeries.set(row.series_id,[]);bySeries.get(row.series_id).push(row);});
+      const palette=['#2463eb','#0c9488','#d97706','#7c3aed','#db2777','#0284c7'];
+      groups=Array.from(bySeries.entries()).map(([key,rows],i)=>({key,name:rows[0].series_name,rows,color:palette[i%palette.length]}));
+    }
     else groups=AUTOMATION_TABLES.filter(spec=>spec.family===mode).map(spec=>({key:spec.series,name:spec.label,rows:currentRows.filter(row=>row.series_id===spec.series),color:colors[spec.series]}));
     const manualGroups=new Map();
     manual.forEach(row=>{const key=row.series_name||'Serie Excel';if(!manualGroups.has(key))manualGroups.set(key,[]);manualGroups.get(key).push(row);});
@@ -117,7 +123,7 @@
     const svg=document.getElementById('chart'),w=1000,h=360,p={l:72,r:22,t:18,b:45};
     const mode=document.getElementById('indicator').value;
     const groups=selectedGroups();
-    const titles={retail:['Ventas minoristas — Madrid','INE · Madrid. Marca una serie manual para compararla si quieres.'],iass:['Indicador de actividad del sector servicios (IASS)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],ipi:['Índice de producción industrial (IPI)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],other:['Excel y otras fuentes','Series cargadas manualmente y bases adicionales, como Datacomex cuando se incorpore.']};
+    const titles={ipc:['IPC ? precios y grupos de consumo','Cat?logo nacional del IPC: ?ndices y variaciones.'],icm:['ICM ? comercio minorista','Cat?logo nacional del comercio minorista: ?ndices y tasas.'],retail:['Ventas minoristas — Madrid','INE · Madrid. Marca una serie manual para compararla si quieres.'],iass:['Indicador de actividad del sector servicios (IASS)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],ipi:['Índice de producción industrial (IPI)','Tres versiones del índice general: original, ajustado de calendario y CVEC'],other:['Excel y otras fuentes','Series cargadas manualmente y bases adicionales, como Datacomex cuando se incorpore.']};
     document.getElementById('chart-title').textContent=titles[mode][0];document.getElementById('chart-description').textContent=titles[mode][1];
     const all=groups.flatMap(group=>group.rows.map(row=>({row,time:dateNumber(row.period),value:Number(row.value)}))).filter(item=>Number.isFinite(item.time)&&Number.isFinite(item.value));
     if(!all.length){svg.innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">No hay observaciones para mostrar.</text>';return;}
@@ -212,7 +218,7 @@
       currentRows=parseCsv(await response.text());
       if(!currentRows.some(row=>row.source==='INE'&&row.series_id===INE_ID))throw new Error('El CSV no contiene la serie INE esperada.');
       updateCards();renderSourceOptions();renderSeriesOptions(document.getElementById('indicator').value);draw();const retrieved=currentRows.map(row=>row.retrieved_at).filter(Boolean).sort().at(-1);
-      refreshViewStatus('Datos del repositorio: '+(retrieved?new Date(retrieved).toLocaleString('es-ES'):'fecha no disponible')+'. Usa “Actualizar datos” para consultar el INE ahora.');
+      refreshViewStatus('Datos del repositorio ('+currentRows.filter(row=>row.series_id.startsWith('IPC')||row.series_id.startsWith('ICM')).length+' observaciones IPC/ICM): '+(retrieved?new Date(retrieved).toLocaleString('es-ES'):'fecha no disponible')+'. Usa “Actualizar datos” para consultar el INE ahora.');
     } catch(error) {refreshViewStatus('No se pudieron cargar los datos: '+error.message);document.getElementById('chart').innerHTML='<text x="500" y="180" text-anchor="middle" class="empty">Datos no disponibles.</text>';}
     document.getElementById('range').addEventListener('change',draw);
     document.getElementById('date-from').addEventListener('change',draw);
