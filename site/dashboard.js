@@ -99,19 +99,43 @@
     return detail.join(' ? ');
   }
 
+  function statisticName(fullName) {
+    const text=String(fullName||'').toLocaleLowerCase('es');
+    if(text.includes('variaci?n mensual'))return 'Variaci?n mensual';
+    if(text.includes('variaci?n anual'))return 'Variaci?n anual';
+    if(text.includes('media en lo que va')||text.includes('lo que va de a?o'))return 'Variaci?n acumulada anual';
+    if(text.includes('variaci?n'))return 'Variaci?n';
+    if(text.includes('?ndice'))return '?ndice';
+    return 'Valor';
+  }
+
   function renderSeriesOptions(mode) {
-    if(activeSeriesMode)seriesSelectionByMode[activeSeriesMode]=new Set(Array.from(document.querySelectorAll('#series-options input:checked')).map(input=>input.value));
-    const groups=buildGroups(mode),previous=seriesSelectionByMode[mode],known=seriesSelectionByMode[mode+'_known']||new Set();
+    const series=buildGroups(mode),previous=seriesSelectionByMode[mode],known=seriesSelectionByMode[mode+'_known']||new Set();
+    const isCatalog=mode==='ipc'||mode==='icm';
+    const catalogGroups=new Map();
+    series.forEach(item=>{
+      const parts=item.name.split('.').map(part=>part.trim()).filter(Boolean);
+      const base=isCatalog?parts.slice(0,-1).join('. '):item.name;
+      if(!catalogGroups.has(base))catalogGroups.set(base,[]);
+      catalogGroups.get(base).push(item);
+    });
+    const entries=Array.from(catalogGroups.entries());
     const query=(document.getElementById('series-search')?.value||'').trim().toLocaleLowerCase('es');
-    const visible=groups.filter(group=>!query||(group.name+' '+shortSeriesName(group.name)).toLocaleLowerCase('es').includes(query));
-    const defaults=new Set(groups.slice(0,3).map(group=>group.key));
-    document.getElementById('series-options').innerHTML=visible.map(group=>{
-      const checked=previous?previous.has(group.key):(!known.has(group.key)&&defaults.has(group.key));
-      const label=shortSeriesName(group.name);
-      return '<label class="check-option" title="'+escapeHtml(group.name)+'"><input class="series-option" type="checkbox" value="'+escapeHtml(group.key)+'"'+(checked?' checked':'')+'> <span>'+escapeHtml(label)+'</span></label>';
-    }).join('');
-    document.getElementById('series-count').textContent=query?visible.length+' resultados de '+groups.length+' series':groups.length+' series disponibles ? '+Array.from(document.querySelectorAll('#series-options input:checked')).length+' seleccionadas';
-    seriesSelectionByMode[mode+'_known']=new Set(groups.map(group=>group.key));
+    const visible=entries.filter(([base,items])=>!query||(base+' '+items.map(item=>item.name+' '+shortSeriesName(item.name)).join(' ')).toLocaleLowerCase('es').includes(query));
+    const defaultKeys=new Set(entries.slice(0,2).flatMap(([,items])=>[items[0]?.key]).filter(Boolean));
+    let shown=[];
+    const renderOption=item=>{
+      const checked=previous?previous.has(item.key):(!known.has(item.key)&&defaultKeys.has(item.key));
+      shown.push(item.key);
+      const label=isCatalog?statisticName(item.name):shortSeriesName(item.name);
+      return '<label class="check-option" title="'+escapeHtml(item.name)+'"><input class="series-option" type="checkbox" value="'+escapeHtml(item.key)+'"'+(checked?' checked':'')+'> <span>'+escapeHtml(label)+'</span></label>';
+    };
+    document.getElementById('series-options').innerHTML=visible.map(([base,items])=>isCatalog
+      ?'<details class="series-group"><summary>'+escapeHtml(shortSeriesName(base))+' <span>'+items.length+' c?lculos</span></summary><div class="series-children">'+items.map(renderOption).join('')+'</div></details>'
+      :items.map(renderOption).join('')).join('');
+    const selected=Array.from(document.querySelectorAll('#series-options input:checked')).length;
+    document.getElementById('series-count').textContent=(query?visible.length+' grupos de '+entries.length:entries.length+' grupos')+' ? '+series.length+' series ? '+selected+' seleccionadas';
+    seriesSelectionByMode[mode+'_known']=new Set(series.map(item=>item.key));
     activeSeriesMode=mode;
   }
 
@@ -245,10 +269,11 @@
     document.getElementById('range').addEventListener('change',draw);
     document.getElementById('date-from').addEventListener('change',draw);
     document.getElementById('date-to').addEventListener('change',draw);
-    document.getElementById('indicator').addEventListener('change',()=>{renderSeriesOptions(document.getElementById('indicator').value);draw();});
-    document.getElementById('series-options').addEventListener('change',()=>{renderSeriesOptions(document.getElementById('indicator').value);draw();});
-    document.getElementById('series-search').addEventListener('input',()=>renderSeriesOptions(document.getElementById('indicator').value));
-    document.getElementById('series-clear-search').addEventListener('click',()=>{document.getElementById('series-search').value='';renderSeriesOptions(document.getElementById('indicator').value);});
+    document.getElementById('indicator').addEventListener('change',()=>{persistVisibleSeries();renderSeriesOptions(document.getElementById('indicator').value);draw();});
+    const persistVisibleSeries=()=>{if(!activeSeriesMode)return;const selection=seriesSelectionByMode[activeSeriesMode]||new Set();document.querySelectorAll('#series-options input').forEach(input=>{if(input.checked)selection.add(input.value);else selection.delete(input.value);});seriesSelectionByMode[activeSeriesMode]=selection;};
+    document.getElementById('series-options').addEventListener('change',()=>{persistVisibleSeries();renderSeriesOptions(document.getElementById('indicator').value);draw();});
+    document.getElementById('series-search').addEventListener('input',()=>{persistVisibleSeries();renderSeriesOptions(document.getElementById('indicator').value);});
+    document.getElementById('series-clear-search').addEventListener('click',()=>{persistVisibleSeries();document.getElementById('series-search').value='';renderSeriesOptions(document.getElementById('indicator').value);});
     document.getElementById('source-options').addEventListener('change',event=>{if(event.target.classList.contains('source-option')){if(event.target.checked)sourceSelection.add(event.target.value);else sourceSelection.delete(event.target.value);}});
     document.getElementById('series-all').addEventListener('click',()=>{const mode=document.getElementById('indicator').value,selection=seriesSelectionByMode[mode]||new Set();document.querySelectorAll('#series-options input').forEach(input=>selection.add(input.value));seriesSelectionByMode[mode]=selection;renderSeriesOptions(mode);draw();});
     document.getElementById('series-none').addEventListener('click',()=>{const mode=document.getElementById('indicator').value;seriesSelectionByMode[mode]=new Set();renderSeriesOptions(mode);draw();});
