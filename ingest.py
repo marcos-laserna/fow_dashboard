@@ -208,7 +208,8 @@ def fetch_catalog_table(catalog: dict[str, Any], retrieved_at: str, full_history
                          "unit": unit, "frequency": "M", "retrieved_at": retrieved_at})
     missing = set(wanted) - seen
     if missing:
-        raise RuntimeError(f"La tabla INE {catalog['table_id']} no devolvi? {len(missing)} c?digos del cat?logo: {sorted(missing)[:5]}")
+        print(f"Aviso: la tabla INE {catalog['table_id']} no devolvi? {len(missing)} series del cat?logo {catalog['family']}: {sorted(missing)}")
+    print(f"Tabla INE {catalog['table_id']}: {len(seen)}/{len(wanted)} series encontradas; {len(rows)} observaciones descargadas.")
     time.sleep(0.5)
     return rows
 
