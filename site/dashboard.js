@@ -82,13 +82,35 @@
     return groups;
   }
 
+  function shortSeriesName(fullName) {
+    const parts=String(fullName||'').split('.').map(part=>part.trim()).filter(Boolean);
+    let territory=parts.shift()||'Espa?a';
+    if(['Total Nacional','Nacional','Espa?a'].includes(territory))territory='Espa?a';
+    let measure='';
+    const source=parts.join(' ').toLocaleLowerCase('es');
+    if(source.includes('precios constantes'))measure='Ventas reales';
+    else if(source.includes('precios corrientes'))measure='Ventas nominales';
+    else if(source.includes('ocupaci'))measure='Ocupaci?n';
+    else if(source.includes('cifra de negocio'))measure='Ventas';
+    let dimension=parts.find(part=>/^(general|alimentos|bebidas|vestido|vivienda|muebles|sanidad|transporte|comunicaciones|ocio|ense?anza|restaurantes|hoteles|otros bienes|alimentaci?n|resto|equipo personal|equipamiento del hogar)/i.test(part));
+    const statistic=parts.find(part=>/?ndice|variaci?n/i.test(part))||'';
+    const shortStatistic=statistic.toLocaleLowerCase('es').includes('variaci?n mensual')?'Cambio mensual':statistic.toLocaleLowerCase('es').includes('variaci?n anual')?'Cambio anual':statistic.toLocaleLowerCase('es').includes('media en lo que va')?'Acumulado anual':statistic.toLocaleLowerCase('es').includes('variaci?n')?'Variaci?n':'?ndice';
+    const detail=[territory,measure,dimension&&dimension!=='General'?dimension:null,shortStatistic].filter(Boolean);
+    return detail.join(' ? ');
+  }
+
   function renderSeriesOptions(mode) {
     if(activeSeriesMode)seriesSelectionByMode[activeSeriesMode]=new Set(Array.from(document.querySelectorAll('#series-options input:checked')).map(input=>input.value));
     const groups=buildGroups(mode),previous=seriesSelectionByMode[mode],known=seriesSelectionByMode[mode+'_known']||new Set();
-    document.getElementById('series-options').innerHTML=groups.map(group=>{
-      const checked=!previous||previous.has(group.key)||!known.has(group.key);
-      return '<label class="check-option"><input class="series-option" type="checkbox" value="'+escapeHtml(group.key)+'"'+(checked?' checked':'')+'> '+escapeHtml(group.name)+'</label>';
+    const query=(document.getElementById('series-search')?.value||'').trim().toLocaleLowerCase('es');
+    const visible=groups.filter(group=>!query||(group.name+' '+shortSeriesName(group.name)).toLocaleLowerCase('es').includes(query));
+    const defaults=new Set(groups.slice(0,3).map(group=>group.key));
+    document.getElementById('series-options').innerHTML=visible.map(group=>{
+      const checked=previous?previous.has(group.key):(!known.has(group.key)&&defaults.has(group.key));
+      const label=shortSeriesName(group.name);
+      return '<label class="check-option" title="'+escapeHtml(group.name)+'"><input class="series-option" type="checkbox" value="'+escapeHtml(group.key)+'"'+(checked?' checked':'')+'> <span>'+escapeHtml(label)+'</span></label>';
     }).join('');
+    document.getElementById('series-count').textContent=query?visible.length+' resultados de '+groups.length+' series':groups.length+' series disponibles ? '+Array.from(document.querySelectorAll('#series-options input:checked')).length+' seleccionadas';
     seriesSelectionByMode[mode+'_known']=new Set(groups.map(group=>group.key));
     activeSeriesMode=mode;
   }
@@ -224,10 +246,12 @@
     document.getElementById('date-from').addEventListener('change',draw);
     document.getElementById('date-to').addEventListener('change',draw);
     document.getElementById('indicator').addEventListener('change',()=>{renderSeriesOptions(document.getElementById('indicator').value);draw();});
-    document.getElementById('series-options').addEventListener('change',draw);
+    document.getElementById('series-options').addEventListener('change',()=>{renderSeriesOptions(document.getElementById('indicator').value);draw();});
+    document.getElementById('series-search').addEventListener('input',()=>renderSeriesOptions(document.getElementById('indicator').value));
+    document.getElementById('series-clear-search').addEventListener('click',()=>{document.getElementById('series-search').value='';renderSeriesOptions(document.getElementById('indicator').value);});
     document.getElementById('source-options').addEventListener('change',event=>{if(event.target.classList.contains('source-option')){if(event.target.checked)sourceSelection.add(event.target.value);else sourceSelection.delete(event.target.value);}});
-    document.getElementById('series-all').addEventListener('click',()=>{document.querySelectorAll('#series-options input').forEach(input=>input.checked=true);draw();});
-    document.getElementById('series-none').addEventListener('click',()=>{document.querySelectorAll('#series-options input').forEach(input=>input.checked=false);draw();});
+    document.getElementById('series-all').addEventListener('click',()=>{const mode=document.getElementById('indicator').value,selection=seriesSelectionByMode[mode]||new Set();document.querySelectorAll('#series-options input').forEach(input=>selection.add(input.value));seriesSelectionByMode[mode]=selection;renderSeriesOptions(mode);draw();});
+    document.getElementById('series-none').addEventListener('click',()=>{const mode=document.getElementById('indicator').value;seriesSelectionByMode[mode]=new Set();renderSeriesOptions(mode);draw();});
     document.getElementById('source-all').addEventListener('click',()=>{document.querySelectorAll('#source-options input').forEach(input=>input.checked=true);sourceSelection.clear();document.querySelectorAll('#source-options input').forEach(input=>sourceSelection.add(input.value));});
     document.getElementById('source-none').addEventListener('click',()=>{document.querySelectorAll('#source-options input').forEach(input=>input.checked=false);sourceSelection.clear();});
     document.getElementById('refresh').addEventListener('click',refreshIne);

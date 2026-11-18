@@ -30,12 +30,18 @@
     button.primary { background:var(--blue); border-color:var(--blue); color:white; }
     button:disabled { opacity:.55; cursor:wait; }
     .actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-    .selection-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:12px 0; }
+    .selection-grid { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(220px,1fr); gap:14px; margin:12px 0; }
     fieldset { min-width:0; border:1px solid var(--line); border-radius:10px; padding:10px 12px; }
     legend { padding:0 5px; color:var(--muted); font-size:13px; font-weight:600; }
-    .checklist { display:flex; flex-wrap:wrap; gap:7px 14px; }
-    .check-option { display:inline-flex; align-items:center; gap:6px; font-size:13px; }
-    .selection-tools { display:flex; gap:8px; margin-top:8px; }
+    .checklist { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 12px; max-height:280px; overflow:auto; padding:3px 2px; }
+    .check-option { display:flex; align-items:flex-start; gap:8px; min-width:0; padding:8px 9px; border:1px solid #edf0f4; border-radius:8px; font-size:13px; line-height:1.35; cursor:pointer; }
+    .check-option:hover { background:#f7f9fc; border-color:#c9d9f5; }
+    .check-option input { margin-top:2px; flex:0 0 auto; }
+    .selection-tools { display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }
+    .series-toolbar { display:flex; gap:8px; margin:8px 0; }
+    .series-toolbar input { min-width:0; flex:1; border:1px solid #ccd5e0; border-radius:8px; padding:8px 10px; font:inherit; }
+    .series-count { color:var(--muted); font-size:12px; margin:5px 0; }
+    @media(max-width:720px) { .checklist { grid-template-columns:1fr; max-height:240px; } }
     .selection-tools button { padding:4px 7px; font-size:12px; }
     .filter-note { color:var(--muted); font-size:12px; margin:0 0 8px; }
     #chart { width:100%; height:auto; min-height:250px; overflow:visible; }
@@ -57,7 +63,7 @@
     <div class="notice"><strong>Prueba de ingesta:</strong> la serie mensual del INE se actualiza automáticamente. La serie Excel es un mock con datos sintéticos; sustitúyelo por tu Excel real cuando quieras probar la carga.</div>
     <section class="cards" aria-label="Resumen">
       <article class="card"><div class="label">Último dato INE</div><div class="value" id="latest-value">—</div><div class="subvalue" id="latest-period">Cargando…</div></article>
-      <article class="card"><div class="label">Períodos disponibles</div><div class="value" id="period-count">—</div><div class="subvalue">Observaciones mensuales</div></article>
+      <article class="card"><div class="label">Períodos disponibles</div><div class="value" id="period-count">—</div><div class="subvalue">En la serie principal</div></article>
       <article class="card"><div class="label">Excel manual</div><div class="value" id="manual-status">Pendiente</div><div class="subvalue" id="manual-detail">Añade un Excel a data/manual/</div></article>
     </section>
     <section class="panel">
@@ -73,7 +79,7 @@
         </div>
       </div>
       <div class="selection-grid">
-        <fieldset><legend>Series para la gráfica y el CSV</legend><div class="checklist" id="series-options"></div><div class="selection-tools"><button id="series-all" type="button">Marcar todas</button><button id="series-none" type="button">Desmarcar todas</button></div></fieldset>
+        <fieldset><legend>Series para la gráfica y el CSV</legend><div class="series-toolbar"><input id="series-search" type="search" placeholder="Buscar por territorio, categor?a o medida?" aria-label="Buscar series"><button id="series-clear-search" type="button">Limpiar</button></div><p class="series-count" id="series-count"></p><div class="checklist" id="series-options"></div><div class="selection-tools"><button id="series-all" type="button">Seleccionar visibles</button><button id="series-none" type="button">Quitar selecci?n</button></div></fieldset>
         <fieldset><legend>Fuentes incluidas en el CSV</legend><div class="checklist" id="source-options"></div><div class="selection-tools"><button id="source-all" type="button">Marcar todas</button><button id="source-none" type="button">Desmarcar todas</button></div></fieldset>
       </div>
       <p class="filter-note">Las fechas y las casillas de series se aplican a la gráfica y a la descarga. La selección de fuentes solo afecta al CSV.</p>
