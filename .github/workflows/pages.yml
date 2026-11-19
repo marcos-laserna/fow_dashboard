@@ -1,11 +1,11 @@
-name: Deploy test dashboard to Pages
+name: Deploy dashboard to Pages
 
 on:
   push:
     branches: [main]
     paths:
       - "site/**"
-      - "data/processed/observations.csv"
+      - "data/processed/*.csv"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
   workflow_run:
@@ -39,7 +39,7 @@ jobs:
       - name: Prepare site data
         run: |
           mkdir -p site/data
-          cp data/processed/observations.csv site/data/observations.csv
+          cp data/processed/observations.csv data/processed/catalog.csv site/data/
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v4
         with:

@@ -1,36 +1,50 @@
 # Series Dashboard
 
-Proyecto de análisis de indicadores económicos y laborales. La exploración de las
-fuentes del INE está en [`APIs/`](APIs/).
+Piloto de visualización de series económicas al estilo Haver: catálogo con buscador,
+gráfico de varias series con doble eje, transformaciones (nivel, % periodo anterior,
+% interanual, diferencia, base 100) y descarga en CSV o Excel.
 
-## Ingesta inicial
+Solo contiene datos públicos (INE, Eurostat) y Excel manuales sintéticos de ejemplo.
 
-`ingest.py` descarga la serie mensual de ventas minoristas de Madrid configurada
-en [`data/series.json`](data/series.json) y lee los Excel de [`data/manual/`](data/manual/).
-El resultado normalizado se guarda en `data/processed/observations.csv`.
+## Dos interfaces sobre los mismos datos
 
-Para cargar una serie manual, copia `data/manual/plantilla_serie.xlsx`, rellena la
-hoja `datos` y añade el archivo a `data/manual/`. GitHub Actions está configurado
-para ejecutar la ingesta al cambiar esos archivos y una vez al día. La primera
-ejecución ya se completó correctamente en GitHub Actions.
+- **GitHub Pages** (`site/`): web estática; lee `data/processed/catalog.csv` y
+  `observations.csv`. La vista se guarda en la URL, así que puedes compartir enlaces.
+- **Streamlit** (`app/streamlit_app.py`): misma funcionalidad en Python.
 
-La demo del dashboard está en `site/`. `data/manual/mock_serie_prueba.xlsx`
-contiene valores sintéticos para probar la segunda línea. Ejecuta `preview.ps1`
-en Windows y abre `http://127.0.0.1:8765`. El botón **Actualizar datos** consulta
-las últimas observaciones del INE para esta sesión; **Descargar CSV** exporta las
-dos series visibles. El refresco manual del navegador no modifica el histórico
-del repositorio.
+### En local
 
-GitHub Pages no está habilitado: el plan actual no admite publicarlo desde este
-repositorio privado. Su workflow queda manual hasta que se resuelva esa limitación.
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt -r app/requirements.txt
+.venv/bin/streamlit run app/streamlit_app.py      # Streamlit
+python3 -m http.server 8765                        # Pages: abre http://127.0.0.1:8765/site/
+```
 
-El workflow conserva los datos procesados en Git. Si el Excel contiene datos
-privados, el repositorio de GitHub debe ser privado: borrar un archivo en un
-commit posterior no elimina sus versiones del historial.
+## Datos
+
+`python ingest.py` (paquete `pipeline/`) descarga las fuentes de `data/series.json`
+y lee los Excel de `data/manual/` (ver su README para el formato). Genera:
+
+- `data/processed/observations.csv`: formato largo, una fila por serie y periodo.
+- `data/processed/catalog.csv`: una fila por serie (fuente, grupo, frecuencia, rango).
+
+GitHub Actions ejecuta la ingesta a diario y al cambiar los Excel o la configuración,
+y después vuelve a publicar Pages.
+
+Para añadir una serie: una entrada en `sources` de `data/series.json` (tipos
+`ine_series`, `ine_general_index`, `ine_catalog`, `eurostat`) o un Excel en `data/manual/`.
+
+## Tests
+
+```bash
+.venv/bin/pip install -r requirements-dev.txt && .venv/bin/python -m pytest -q
+```
 
 ## Estructura
 
+- `pipeline/`: ingesta (fuentes, almacenamiento, transformaciones).
+- `site/`: dashboard estático para GitHub Pages.
+- `app/`: app de Streamlit y sus dependencias.
+- `data/`: configuración, Excel manuales y datos procesados.
 - `APIs/`: documentación y ejemplos de acceso a estadísticas públicas.
-- `data/manual/`: entradas Excel aportadas manualmente y plantilla.
-- `data/processed/`: tabla normalizada generada por la ingesta.
-- `.github/workflows/ingest.yml`: planificación y ejecución en GitHub Actions.
+- `tests/`: tests de la ingesta.
