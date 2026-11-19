@@ -104,8 +104,8 @@ def _plain(text: Any) -> str:
     return re.sub(r"[^a-z0-9]+", " ", value).strip()
 
 
-def fetch_ine_automation(ine: dict[str, Any], retrieved_at: str) -> list[dict[str, str]]:
-    """Fetch the general national index used by the IASS/IPI automation tables."""
+def fetch_ine_general_index(ine: dict[str, Any], retrieved_at: str) -> list[dict[str, str]]:
+    """Fetch the general national index for the IASS/IPI INE tables."""
     query = urllib.parse.urlencode({"tip": "AM"})
     url = f"https://servicios.ine.es/wstempus/js/es/DATOS_TABLA/{ine['table_id']}?{query}"
     request = urllib.request.Request(url, headers={"User-Agent": "FutureOfWorkData/1.0"})
@@ -294,8 +294,8 @@ def main() -> None:
     config = read_config()
     retrieved_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     rows = fetch_ine(config["ine"], retrieved_at)
-    for ine in config.get("ine_automation", []):
-        rows.extend(fetch_ine_automation(ine, retrieved_at))
+    for ine in config.get("ine_indicators", []):
+        rows.extend(fetch_ine_general_index(ine, retrieved_at))
     # Full catalogs can be refreshed on schedule; process one series per request to
     # keep responses bounded and allow GitHub Actions to retry individual failures.
     full_history = os.environ.get("INE_FULL_HISTORY", "0").lower() in {"1", "true", "yes"}

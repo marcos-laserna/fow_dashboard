@@ -7,7 +7,7 @@
     "unit": "Índice (2021=100)",
     "frequency": "M"
   },
-  "ine_automation": [
+  "ine_indicators": [
     {
       "table_id": "60288",
       "series_id": "ine_iass_raw",

@@ -3,7 +3,7 @@
 
   const INE_ID = 'ine_retail_sales_madrid';
   const INE_NEEDLE = 'Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice';
-  const AUTOMATION_TABLES = [
+  const INDICATOR_TABLES = [
     {id:'60288',series:'ine_iass_raw',label:'IASS · Original (60288)',family:'iass',aliases:['indice general','total servicios','sector servicios de mercado']},
     {id:'60289',series:'ine_iass_wda',label:'IASS · Ajustado calendario (60289)',family:'iass',aliases:['indice general','total servicios','sector servicios de mercado']},
     {id:'60290',series:'ine_iass_cvec',label:'IASS · Ajustado calendario y estacionalidad (60290)',family:'iass',aliases:['indice general','total servicios','sector servicios de mercado']},
@@ -70,7 +70,7 @@
       const palette=['#2463eb','#0c9488','#d97706','#7c3aed','#db2777','#0284c7'];
       groups=Array.from(bySeries.entries()).map(([key,rows],i)=>({key,name:rows[0].series_name,rows,color:palette[i%palette.length]}));
     }
-    else groups=AUTOMATION_TABLES.filter(spec=>spec.family===mode).map(spec=>({key:spec.series,name:spec.label,rows:currentRows.filter(row=>row.series_id===spec.series),color:colors[spec.series]}));
+    else groups=INDICATOR_TABLES.filter(spec=>spec.family===mode).map(spec=>({key:spec.series,name:spec.label,rows:currentRows.filter(row=>row.series_id===spec.series),color:colors[spec.series]}));
     const manualGroups=new Map();
     manual.forEach(row=>{const key=row.series_name||'Serie Excel';if(!manualGroups.has(key))manualGroups.set(key,[]);manualGroups.get(key).push(row);});
     if(mode==='retail')Array.from(manualGroups.entries()).forEach((entry,index)=>groups.push({key:'manual_series|'+entry[0],name:entry[0],rows:entry[1],color:index===0?'#0c9488':'#d97706'}));
@@ -232,7 +232,7 @@
       if(!retailResponse.ok)throw new Error('INE respondió HTTP '+retailResponse.status+' al consultar ventas minoristas.');
       const retailPayload=await retailResponse.json(),retailMatches=retailPayload.filter(series=>plainName(series.Nombre).includes(plainName(INE_NEEDLE)));
       if(retailMatches.length!==1)throw new Error('No se encontró una única serie de ventas minoristas; conserva los datos previos.');
-      const specs=[{id:'75808',series:INE_ID,label:'Índice de ventas minoristas — Madrid',aliases:[],retail:true},...AUTOMATION_TABLES];
+      const specs=[{id:'75808',series:INE_ID,label:'Índice de ventas minoristas — Madrid',aliases:[],retail:true},...INDICATOR_TABLES];
       for(const spec of specs){
         let series;
         if(spec.retail)series=retailMatches[0];

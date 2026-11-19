@@ -31,7 +31,6 @@ commit posterior no elimina sus versiones del historial.
 ## Estructura
 
 - `APIs/`: documentación y ejemplos de acceso a estadísticas públicas.
-- `Automatizaciones/`: procesos de actualización de indicadores.
 - `data/manual/`: entradas Excel aportadas manualmente y plantilla.
 - `data/processed/`: tabla normalizada generada por la ingesta.
 - `.github/workflows/ingest.yml`: planificación y ejecución en GitHub Actions.
