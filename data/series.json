@@ -17,7 +17,9 @@
       "unit": "Índice (2021=100)",
       "frequency": "M",
       "type": "ine_series",
-      "group": "retail"
+      "group": "retail",
+      "concept": "Ventas minoristas (ICM)",
+      "variant": "Madrid · Índice"
     },
     {
       "table_id": "60288",
@@ -1429,7 +1431,8 @@
       "label": "IPCA tasa anual — España",
       "unit": "%",
       "frequency": "M",
-      "group": "eurostat"
+      "group": "eurostat",
+      "measure": "yoy"
     },
     {
       "type": "eurostat",
@@ -1443,7 +1446,8 @@
       "label": "IPCA tasa anual — Zona euro",
       "unit": "%",
       "frequency": "M",
-      "group": "eurostat"
+      "group": "eurostat",
+      "measure": "yoy"
     }
   ],
   "manual": {

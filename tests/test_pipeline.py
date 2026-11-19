@@ -243,3 +243,23 @@ def test_run_aborts_without_writing_when_excel_fails(tmp_path, monkeypatch):
     monkeypatch.setattr(run, "ROOT", tmp_path)
     assert run.main() == 1
     assert not (tmp_path / "data" / "processed" / "observations.csv").exists()
+
+
+def test_classify_groups_siblings_and_flags_transformed():
+    from pipeline.classify import classify
+
+    a = classify("Nacional. Índice general. Índice.")
+    b = classify("Nacional. Índice general. Variación anual.")
+    c = classify(
+        "Total Nacional. Cifra de negocio. General. Variación de la media en lo que va de año."
+    )
+    assert a["concept"] == b["concept"] == "Nacional. Índice general"
+    assert (a["measure"], b["measure"], c["measure"]) == ("level", "yoy", "ytd")
+    assert classify("Nacional. Vivienda. Variación mensual.")["measure"] == "pct"
+    assert classify("IASS · Original (60288)") == {
+        "concept": "IASS",
+        "variant": "Original (60288)",
+        "measure": "level",
+    }
+    assert classify("Tasa de paro (SA) — España")["concept"] == "Tasa de paro (SA)"
+    assert classify("SIMULADA - serie Excel")["variant"] == ""

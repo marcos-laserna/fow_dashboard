@@ -6,47 +6,58 @@
   <title>Series Dashboard</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-  <header>
-    <h1>Series Dashboard</h1>
-    <span id="status" class="muted">Cargando datos…</span>
+  <header class="titlebar">
+    <strong>Series Dashboard</strong>
+    <span id="status">Cargando datos…</span>
   </header>
 
+  <div class="toolbar">
+    <label>Transformación
+      <select id="transform">
+        <option value="level">Nivel</option>
+        <option value="pct">% periodo anterior</option>
+        <option value="yoy">% interanual</option>
+        <option value="diff">Diferencia</option>
+        <option value="rebase">Base 100 = inicio</option>
+      </select>
+    </label>
+    <label>Desde <input id="from" type="month"></label>
+    <label>Hasta <input id="to" type="month"></label>
+    <span class="sep"></span>
+    <button id="dl-csv" type="button">Exportar CSV</button>
+    <button id="dl-xlsx" type="button">Exportar Excel</button>
+    <button id="clear" type="button">Limpiar</button>
+  </div>
+
   <main>
-    <aside id="catalog-panel">
-      <div class="filters">
-        <input id="search" type="search" placeholder="Buscar código o nombre…" aria-label="Buscar series">
-        <select id="group" aria-label="Grupo"><option value="">Todos los grupos</option></select>
-      </div>
-      <div id="catalog-count" class="muted"></div>
-      <ul id="catalog" aria-label="Catálogo de series"></ul>
+    <aside>
+      <div class="pane-title">Bases de datos</div>
+      <input id="search" type="search" placeholder="Buscar código o descripción…" aria-label="Buscar series">
+      <div id="tree" role="tree" aria-label="Catálogo de series"></div>
+      <div id="catalog-count" class="foot"></div>
     </aside>
 
-    <section id="workspace">
-      <div class="toolbar">
-        <label>Transformación
-          <select id="transform">
-            <option value="level">Nivel</option>
-            <option value="pct">% periodo anterior</option>
-            <option value="yoy">% interanual</option>
-            <option value="diff">Diferencia</option>
-            <option value="rebase">Base 100 = inicio</option>
-          </select>
-        </label>
-        <label>Desde <input id="from" type="month"></label>
-        <label>Hasta <input id="to" type="month"></label>
-        <span class="spacer"></span>
-        <button id="dl-csv" type="button">CSV</button>
-        <button id="dl-xlsx" type="button">Excel</button>
-        <button id="clear" type="button" class="ghost">Limpiar</button>
-      </div>
+    <section class="work">
+      <div class="pane-title">Series seleccionadas <span class="hint">· la transformación solo se aplica a series en nivel</span></div>
+      <table id="selected">
+        <thead><tr>
+          <th></th><th>Código</th><th>Descripción</th><th>Frec.</th><th>Inicio</th><th>Fin</th>
+          <th class="num">Último</th><th>Medida</th><th>Mostrado como</th><th>Eje</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      <p id="empty">Marca series en el árbol de la izquierda (máx. 8).</p>
 
-      <div id="selected"></div>
-      <div id="chart"></div>
-      <p id="empty" class="muted">Selecciona series en el catálogo (máx. 8). Haz clic en el eje de cada serie para pasarla a la derecha.</p>
+      <div class="chart-box">
+        <div id="chart-title"></div>
+        <div id="chart-sub"></div>
+        <div id="chart"></div>
+        <div id="chart-source"></div>
+      </div>
     </section>
   </main>
 

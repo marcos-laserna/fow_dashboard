@@ -15,6 +15,7 @@ def main() -> int:
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     rows = []
     groups = {}
+    meta = {}  # config overrides for concept / variant / measure
     remote = config.get("sources", [])
     failures = 0
     for spec in remote:
@@ -25,6 +26,13 @@ def main() -> int:
             groups[item["series_id"]] = group
         if "series_id" in spec:
             groups[spec["series_id"]] = group
+        override = {k: spec[k] for k in ("concept", "variant", "measure") if k in spec}
+        if override:
+            for sid in [spec.get("series_id")] + [
+                i["series_id"] for i in spec.get("series", [])
+            ]:
+                if sid:
+                    meta[sid] = override
         try:
             typ = spec["type"]
             if typ == "ine_series":
@@ -66,6 +74,7 @@ def main() -> int:
         ROOT / "data/processed/catalog.csv",
         groups,
         ROOT / "data/processed/catalog.csv",
+        meta,
     )
     print(f"Observaciones recibidas: {len(rows)}")
     if remote and failures == len(remote):

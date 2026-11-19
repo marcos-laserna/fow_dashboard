@@ -1,30 +1,36 @@
-// Series Dashboard — static, Haver-style series browser.
-// Data: catalog.csv (one row per series) + observations.csv (long format).
+// Series Dashboard — Haver-style static series browser.
+// Data: catalog.csv (one row per series, with concept/variant/measure) and
+// observations.csv (long format). Both produced by pipeline/.
 'use strict';
 
 const MAX_SERIES = 8;
-const COLORS = ['#1f4e8c', '#d1495b', '#2a9d8f', '#e9a03b', '#6a4c93', '#3d5a80', '#8d6e63', '#43aa8b'];
+const COLORS = ['#0b2e6b', '#c0392b', '#1e8449', '#d68910', '#6c3483', '#2e86c1', '#7b7d7d', '#a04000'];
 const GROUP_LABELS = {
   retail: 'Ventas minoristas', ipc: 'IPC · precios', icm: 'ICM · comercio minorista',
   iass: 'IASS · servicios', ipi: 'IPI · industria', eurostat: 'Eurostat · UE',
   manual: 'Excel manuales', other: 'Otros',
 };
+const MEASURE_LABELS = { level: 'Nivel', pct: '% m/m', yoy: '% a/a', ytd: '% acum. año' };
 const TRANSFORM_LABELS = {
   level: 'Nivel', pct: '% periodo anterior', yoy: '% interanual', diff: 'Diferencia', rebase: 'Base 100',
 };
 
-const state = { catalog: [], obs: new Map(), selected: [] }; // selected: [{id, axis:'y'|'y2'}]
+const state = {
+  catalog: [], byId: new Map(), obs: new Map(),
+  selected: [],          // [{id, axis: 'y' | 'y2'}]
+  open: new Set(),       // expanded tree nodes ("g:ipc", "c:ipc|Nacional. Índice general")
+};
 const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = (v) => (v == null || Number.isNaN(v) ? '—' : v.toLocaleString('es-ES', { maximumFractionDigits: 2 }));
 
-// ---------- data loading ----------
-// On Pages the workflow copies the CSVs into site/data/. Locally (serving the
-// repo root) they are read straight from data/processed/.
+// ---------- data ----------
+// On Pages the workflow copies the CSVs into site/data/; locally (serving the
+// repo root) they are read from data/processed/.
 async function loadCsv(name) {
   for (const url of [`data/${name}`, `../data/processed/${name}`]) {
     const res = await fetch(url, { cache: 'no-cache' }).catch(() => null);
-    if (res && res.ok) {
-      return Papa.parse(await res.text(), { header: true, skipEmptyLines: true }).data;
-    }
+    if (res && res.ok) return Papa.parse(await res.text(), { header: true, skipEmptyLines: true }).data;
   }
   throw new Error(`No se encontró ${name}`);
 }
@@ -43,7 +49,6 @@ function toDate(p) {
   return p;
 }
 function transform(points, kind, fromMonth) {
-  // points: [[period, value]] sorted by period
   if (kind === 'level') return points;
   if (kind === 'pct' || kind === 'diff') {
     return points.map(([p, v], i) => {
@@ -68,31 +73,56 @@ function transform(points, kind, fromMonth) {
   }
   return points;
 }
+// Series that the source already publishes as a rate are never re-transformed.
+const effectiveKind = (s) => (s.measure === 'level' ? $('transform').value : 'level');
+const shownAs = (s) => (s.measure === 'level' ? TRANSFORM_LABELS[$('transform').value] : `${MEASURE_LABELS[s.measure]} (origen)`);
 
-// ---------- catalog panel ----------
-function renderGroups() {
-  const groups = [...new Set(state.catalog.map((s) => s.group))].sort();
-  $('group').innerHTML = '<option value="">Todos los grupos</option>' +
-    groups.map((g) => `<option value="${g}">${GROUP_LABELS[g] || g}</option>`).join('');
+// ---------- tree: group → concept → series ----------
+function buildTree(rows) {
+  const groups = new Map();
+  for (const s of rows) {
+    if (!groups.has(s.group)) groups.set(s.group, new Map());
+    const concepts = groups.get(s.group);
+    if (!concepts.has(s.concept)) concepts.set(s.concept, []);
+    concepts.get(s.concept).push(s);
+  }
+  return groups;
 }
 
-function renderCatalog() {
-  const q = $('search').value.trim().toLowerCase();
-  const g = $('group').value;
-  const terms = q.split(/\s+/).filter(Boolean);
+function leafHtml(s, sel) {
+  const on = sel.has(s.series_id);
+  const tag = s.measure === 'level' ? '' : `<span class="tag tx" title="La fuente ya publica esta serie transformada">${MEASURE_LABELS[s.measure]}</span>`;
+  return `<div class="node leaf ${on ? 'on' : ''}" data-id="${esc(s.series_id)}" role="treeitem" aria-selected="${on}"
+      title="${esc(s.series_name)} · ${esc(s.source)} · ${s.first_period}–${s.last_period}">
+    <input type="checkbox" tabindex="-1" ${on ? 'checked' : ''}>
+    <span class="code">${esc(s.series_id)}</span>
+    <span>${esc(s.variant || s.series_name)}</span>${tag}</div>`;
+}
+
+function renderTree() {
+  const terms = $('search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const rows = state.catalog.filter((s) =>
-    (!g || s.group === g) &&
-    terms.every((t) => `${s.series_id} ${s.series_name} ${s.source}`.toLowerCase().includes(t)));
+    terms.every((t) => `${s.series_id} ${s.series_name} ${s.source} ${GROUP_LABELS[s.group] || s.group}`.toLowerCase().includes(t)));
+  const searching = terms.length > 0;
   const sel = new Set(state.selected.map((s) => s.id));
-  $('catalog-count').textContent = `${rows.length} de ${state.catalog.length} series`;
-  $('catalog').innerHTML = rows.slice(0, 400).map((s) => `
-    <li data-id="${s.series_id}" class="${sel.has(s.series_id) ? 'on' : ''}">
-      <input type="checkbox" tabindex="-1" ${sel.has(s.series_id) ? 'checked' : ''}>
-      <div><span class="code">${s.series_id}</span>
-        <span class="name">${s.series_name}</span>
-        <span class="meta">${s.source} · ${s.frequency} · ${s.first_period}–${s.last_period} · último ${fmt(+s.last_value)}</span>
-      </div>
-    </li>`).join('');
+  let html = '';
+  for (const [group, concepts] of buildTree(rows)) {
+    const gKey = `g:${group}`, gOpen = searching || state.open.has(gKey);
+    const n = [...concepts.values()].reduce((a, l) => a + l.length, 0);
+    html += `<div class="node lvl0" data-toggle="${esc(gKey)}"><span class="tw">${gOpen ? '▾' : '▸'}</span>${esc(GROUP_LABELS[group] || group)}<span class="count">(${n})</span></div>`;
+    if (!gOpen) continue;
+    for (const [concept, list] of concepts) {
+      if (list.length === 1 && !list[0].variant) { // lone series: no folder needed
+        html += leafHtml(list[0], sel).replace('node leaf', 'node leaf lvl1');
+        continue;
+      }
+      const cKey = `c:${group}|${concept}`, cOpen = searching || state.open.has(cKey);
+      html += `<div class="node lvl1" data-toggle="${esc(cKey)}" title="${esc(concept)}"><span class="tw">${cOpen ? '▾' : '▸'}</span>${esc(concept)}<span class="count">(${list.length})</span></div>`;
+      if (cOpen) html += list.map((s) => leafHtml(s, sel)).join('');
+    }
+  }
+  $('tree').innerHTML = html || '<div class="node">Sin resultados</div>';
+  $('catalog-count').textContent = `${rows.length} de ${state.catalog.length} series · ${new Set(rows.map((s) => s.group + s.concept)).size} conceptos`;
 }
 
 function toggleSeries(id) {
@@ -103,63 +133,72 @@ function toggleSeries(id) {
   update();
 }
 
-// ---------- workspace ----------
-const meta = (id) => state.catalog.find((s) => s.series_id === id) || { series_id: id, series_name: id, unit: '' };
-const fmt = (v) => (v == null || Number.isNaN(v) ? '—' : v.toLocaleString('es-ES', { maximumFractionDigits: 2 }));
-
+// ---------- selected grid + chart ----------
 function visibleData() {
-  const from = $('from').value, to = $('to').value, kind = $('transform').value;
-  return state.selected.map((s, i) => {
-    const pts = transform(state.obs.get(s.id) || [], kind, from)
+  const from = $('from').value, to = $('to').value;
+  return state.selected.map((sel, i) => {
+    const s = state.byId.get(sel.id);
+    const pts = transform(state.obs.get(sel.id) || [], effectiveKind(s), from)
       .filter(([p]) => (!from || toDate(p) >= `${from}-01`) && (!to || toDate(p) <= `${to}-31`));
-    return { ...s, color: COLORS[i % COLORS.length], meta: meta(s.id), pts };
+    return { ...sel, s, color: COLORS[i % COLORS.length], pts };
   });
 }
 
-function renderChips(data) {
-  $('selected').innerHTML = data.map((d) => `
-    <span class="chip" title="${d.meta.series_name}">
-      <span class="dot" style="background:${d.color}"></span>
-      <span class="code">${d.id}</span>
-      <button type="button" data-axis="${d.id}">${d.axis === 'y' ? 'Eje izq.' : 'Eje der.'}</button>
-      <button type="button" data-remove="${d.id}" aria-label="Quitar">✕</button>
-    </span>`).join('');
+function renderSelected(data) {
+  $('empty').hidden = data.length > 0;
+  $('selected').hidden = data.length === 0;
+  $('selected').querySelector('tbody').innerHTML = data.map((d) => `
+    <tr>
+      <td><span class="swatch" style="background:${d.color}"></span></td>
+      <td class="code">${esc(d.id)}</td>
+      <td class="desc">${esc(d.s.concept)}${d.s.variant ? ` <span style="color:var(--muted)">· ${esc(d.s.variant)}</span>` : ''}</td>
+      <td>${d.s.frequency}</td><td>${d.s.first_period}</td><td>${d.s.last_period}</td>
+      <td class="num">${fmt(+d.s.last_value)}</td>
+      <td>${MEASURE_LABELS[d.s.measure] || '—'}</td>
+      <td>${esc(shownAs(d.s))}</td>
+      <td><button type="button" data-axis="${esc(d.id)}">${d.axis === 'y' ? 'Izq.' : 'Der.'}</button></td>
+      <td><button type="button" data-remove="${esc(d.id)}" aria-label="Quitar">✕</button></td>
+    </tr>`).join('');
+}
+
+function axisTitle(data, axis) {
+  const labels = [...new Set(data.filter((d) => d.axis === axis).map((d) =>
+    (d.s.measure === 'level' && effectiveKind(d.s) === 'level' ? d.s.unit : shownAs(d.s).replace(' (origen)', '')) || ''))];
+  return labels.length === 1 ? labels[0] : '';
 }
 
 function renderChart(data) {
-  $('empty').hidden = data.length > 0;
-  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const ink = dark ? '#e6e8eb' : '#1b1f24', grid = dark ? '#2e343c' : '#e6e9ee';
-  const kind = $('transform').value;
-  const unit = (axis) => {
-    if (kind !== 'level') return TRANSFORM_LABELS[kind];
-    const units = [...new Set(data.filter((d) => d.axis === axis).map((d) => d.meta.unit).filter(Boolean))];
-    return units.length === 1 ? units[0] : '';
-  };
+  const one = data.length === 1 ? data[0].s : null;
+  $('chart-title').textContent = !data.length ? '' : one ? `${one.concept}${one.variant ? ' · ' + one.variant : ''}` : `${data.length} series`;
+  $('chart-sub').textContent = data.length ? [axisTitle(data, 'y'), axisTitle(data, 'y2')].filter(Boolean).join('  |  eje dcho.: ') : '';
+  const sources = [...new Set(data.map((d) => d.s.source.replace(/^Excel:.*/, 'Excel manual')))];
+  $('chart-source').textContent = data.length ? `Fuente: ${sources.join(', ')}` : '';
+
+  const axisStyle = { showline: true, linecolor: '#111', ticks: 'outside', tickcolor: '#111', mirror: false, zeroline: false };
   const traces = data.map((d) => ({
     x: d.pts.map(([p]) => toDate(p)), y: d.pts.map(([, v]) => (v == null ? null : +v)),
-    name: `${d.id} — ${d.meta.series_name}`.slice(0, 90), yaxis: d.axis,
-    type: 'scatter', mode: 'lines', line: { color: d.color, width: 2, dash: d.axis === 'y2' ? 'dot' : 'solid' },
-    hovertemplate: `%{x|%Y-%m}  %{y:,.2f}<extra>${d.id}</extra>`,
+    name: `${d.id}${d.axis === 'y2' ? ' (dcha.)' : ''}`, yaxis: d.axis, type: 'scatter', mode: 'lines',
+    line: { color: d.color, width: 1.8 },
+    hovertemplate: `%{x|%Y-%m}  %{y:,.2f}<extra>${esc(d.id)}</extra>`,
   }));
   const hasRight = data.some((d) => d.axis === 'y2');
+  const anyRate = data.some((d) => d.s.measure !== 'level' || effectiveKind(d.s) !== 'level');
   Plotly.react('chart', traces, {
-    margin: { l: 60, r: hasRight ? 60 : 20, t: 20, b: 40 },
-    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: ink, size: 12 },
-    legend: { orientation: 'h', y: -0.15 }, hovermode: 'x unified',
-    xaxis: { gridcolor: grid, type: 'date' },
-    yaxis: { gridcolor: grid, title: { text: unit('y') }, zeroline: kind !== 'level' },
-    yaxis2: { overlaying: 'y', side: 'right', showgrid: false, visible: hasRight, title: { text: unit('y2') } },
-  }, { responsive: true, displaylogo: false });
+    margin: { l: 55, r: hasRight ? 55 : 15, t: 10, b: 30 },
+    paper_bgcolor: '#fff', plot_bgcolor: '#fff', font: { family: 'Segoe UI, Arial, sans-serif', color: '#111', size: 11 },
+    showlegend: data.length > 1, legend: { orientation: 'h', x: 0, y: 1.08 }, hovermode: 'x unified',
+    xaxis: { ...axisStyle, type: 'date', showgrid: false },
+    yaxis: { ...axisStyle, showgrid: true, gridcolor: '#eceef1', zeroline: anyRate, zerolinecolor: '#888' },
+    yaxis2: { ...axisStyle, overlaying: 'y', side: 'right', showgrid: false, visible: hasRight },
+  }, { responsive: true, displaylogo: false, modeBarButtonsToRemove: ['lasso2d', 'select2d'] });
 }
 
 function update() {
   const data = visibleData();
-  renderChips(data);
+  renderSelected(data);
   renderChart(data);
-  renderCatalog();
-  // Keep the view shareable: #s=ID1,ID2:r&t=yoy&from=2020-01
-  const params = new URLSearchParams();
+  renderTree();
+  const params = new URLSearchParams(); // shareable view: #s=ID1,ID2:r&t=yoy&from=2020-01
   if (state.selected.length) params.set('s', state.selected.map((s) => s.id + (s.axis === 'y2' ? ':r' : '')).join(','));
   if ($('transform').value !== 'level') params.set('t', $('transform').value);
   if ($('from').value) params.set('from', $('from').value);
@@ -167,22 +206,22 @@ function update() {
   history.replaceState(null, '', params.toString() ? `#${params}` : location.pathname);
 }
 
-// ---------- downloads (wide table of what is plotted) ----------
+// ---------- export (wide table of what is plotted) ----------
 function wideTable() {
   const data = visibleData();
   const periods = [...new Set(data.flatMap((d) => d.pts.map(([p]) => p)))].sort();
   const maps = data.map((d) => new Map(d.pts));
-  const kind = TRANSFORM_LABELS[$('transform').value];
-  const header = ['period', ...data.map((d) => d.id)];
-  const names = ['nombre', ...data.map((d) => d.meta.series_name)];
-  const units = ['unidad', ...data.map((d) => ($('transform').value === 'level' ? d.meta.unit : kind))];
-  const body = periods.map((p) => [p, ...maps.map((m) => (m.get(p) == null ? '' : +m.get(p)))]);
-  return [header, names, units, ...body];
+  return [
+    ['period', ...data.map((d) => d.id)],
+    ['descripcion', ...data.map((d) => `${d.s.concept}${d.s.variant ? ' · ' + d.s.variant : ''}`)],
+    ['mostrado_como', ...data.map((d) => (effectiveKind(d.s) === 'level' && d.s.measure === 'level' ? d.s.unit : shownAs(d.s)))],
+    ['fuente', ...data.map((d) => d.s.source)],
+    ...periods.map((p) => [p, ...maps.map((m) => (m.get(p) == null ? '' : +m.get(p)))]),
+  ];
 }
 function download(type) {
   if (!state.selected.length) return setStatus('No hay series seleccionadas.');
-  const rows = wideTable();
-  const stamp = new Date().toISOString().slice(0, 10);
+  const rows = wideTable(), stamp = new Date().toISOString().slice(0, 10);
   if (type === 'csv') {
     const blob = new Blob(['﻿' + Papa.unparse(rows)], { type: 'text/csv;charset=utf-8' });
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `series_${stamp}.csv` });
@@ -193,55 +232,61 @@ function download(type) {
     XLSX.writeFile(wb, `series_${stamp}.xlsx`);
   }
 }
-
 function setStatus(text) { $('status').textContent = text; }
 
 // ---------- init ----------
 function restoreFromHash() {
   const params = new URLSearchParams(location.hash.slice(1));
-  const known = new Set(state.catalog.map((s) => s.series_id));
   state.selected = (params.get('s') || '').split(',').filter(Boolean)
     .map((t) => { const [id, ax] = t.split(':'); return { id, axis: ax === 'r' ? 'y2' : 'y' }; })
-    .filter((s) => known.has(s.id)).slice(0, MAX_SERIES);
+    .filter((s) => state.byId.has(s.id)).slice(0, MAX_SERIES);
   if (params.get('t')) $('transform').value = params.get('t');
   $('from').value = params.get('from') || '';
   $('to').value = params.get('to') || '';
-  if (!state.selected.length) {
-    // Default view: Spain vs euro area unemployment, if available.
-    state.selected = ['EUR_UNE_RT_M_ES', 'EUR_UNE_RT_M_EA'].filter((id) => known.has(id)).map((id) => ({ id, axis: 'y' }));
+  if (!state.selected.length) { // default view: unemployment Spain vs euro area
+    state.selected = ['EUR_UNE_RT_M_ES', 'EUR_UNE_RT_M_EA'].filter((id) => state.byId.has(id)).map((id) => ({ id, axis: 'y' }));
     if (!$('from').value) $('from').value = '2015-01';
+  }
+  for (const s of state.selected) { // expand the tree where the selection lives
+    const c = state.byId.get(s.id);
+    state.open.add(`g:${c.group}`); state.open.add(`c:${c.group}|${c.concept}`);
   }
 }
 
 async function init() {
   try {
+    if (typeof Plotly === 'undefined') throw new Error('no se pudo cargar la librería de gráficos (Plotly)');
     const [catalog, obs] = await Promise.all([loadCsv('catalog.csv'), loadCsv('observations.csv')]);
-    state.catalog = catalog.sort((a, b) => a.group.localeCompare(b.group) || a.series_id.localeCompare(b.series_id));
+    for (const s of catalog) { s.concept ||= s.series_name; s.measure ||= 'level'; s.variant ||= ''; }
+    state.catalog = catalog;
+    state.byId = new Map(catalog.map((s) => [s.series_id, s]));
     for (const r of obs) {
       if (!state.obs.has(r.series_id)) state.obs.set(r.series_id, []);
       state.obs.get(r.series_id).push([r.period, r.value === '' ? null : +r.value]);
     }
     for (const pts of state.obs.values()) pts.sort((a, b) => (a[0] < b[0] ? -1 : 1));
     const latest = catalog.map((s) => s.retrieved_at).sort().pop() || '';
-    setStatus(`${catalog.length} series · actualizado ${latest.slice(0, 10)}`);
-    renderGroups();
+    setStatus(`${catalog.length} series · datos actualizados ${latest.slice(0, 10)}`);
     restoreFromHash();
     update();
   } catch (err) {
-    setStatus(`Error al cargar datos: ${err.message}`);
+    setStatus(`Error: ${err.message}`);
   }
 }
 
-$('search').addEventListener('input', renderCatalog);
-$('group').addEventListener('change', renderCatalog);
-$('catalog').addEventListener('click', (e) => {
-  const li = e.target.closest('li[data-id]');
-  if (li) toggleSeries(li.dataset.id);
+$('search').addEventListener('input', renderTree);
+$('tree').addEventListener('click', (e) => {
+  const node = e.target.closest('[data-toggle], [data-id]');
+  if (!node) return;
+  if (node.dataset.id) return toggleSeries(node.dataset.id);
+  const key = node.dataset.toggle;
+  state.open.has(key) ? state.open.delete(key) : state.open.add(key);
+  renderTree();
 });
 $('selected').addEventListener('click', (e) => {
-  const axisId = e.target.dataset.axis, removeId = e.target.dataset.remove;
-  if (axisId) { const s = state.selected.find((x) => x.id === axisId); s.axis = s.axis === 'y' ? 'y2' : 'y'; update(); }
-  if (removeId) toggleSeries(removeId);
+  const { axis, remove } = e.target.dataset;
+  if (axis) { const s = state.selected.find((x) => x.id === axis); s.axis = s.axis === 'y' ? 'y2' : 'y'; update(); }
+  if (remove) toggleSeries(remove);
 });
 ['transform', 'from', 'to'].forEach((id) => $(id).addEventListener('change', update));
 $('dl-csv').addEventListener('click', () => download('csv'));

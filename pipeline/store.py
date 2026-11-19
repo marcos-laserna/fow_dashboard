@@ -1,6 +1,7 @@
 from __future__ import annotations
 import csv
 from pathlib import Path
+from .classify import classify
 from .model import FIELDS, normalize_unit
 
 CATALOG_FIELDS = (
@@ -8,6 +9,9 @@ CATALOG_FIELDS = (
     "series_name",
     "source",
     "group",
+    "concept",
+    "variant",
+    "measure",
     "frequency",
     "unit",
     "first_period",
@@ -24,8 +28,11 @@ def merge_write(
     catalog_path: Path,
     groups: dict[str, str] | None = None,
     previous_catalog: Path | None = None,
+    meta: dict[str, dict[str, str]] | None = None,
 ) -> int:
+    """meta: optional per-series overrides of concept/variant/measure (from config)."""
     groups = groups or {}
+    meta = meta or {}
     previous = {}
     if previous_catalog and previous_catalog.exists():
         with previous_catalog.open(newline="", encoding="utf-8-sig") as f:
@@ -62,8 +69,10 @@ def merge_write(
     for sid, obs in by.items():
         obs.sort(key=lambda r: r["period"])
         last = obs[-1]
+        info = {**classify(last["series_name"]), **meta.get(sid, {})}
         catalog.append(
             dict(
+                **info,
                 series_id=sid,
                 series_name=last["series_name"],
                 source=last["source"],
@@ -83,7 +92,7 @@ def merge_write(
                 retrieved_at=last["retrieved_at"],
             )
         )
-    catalog.sort(key=lambda r: (r["group"], r["series_id"]))
+    catalog.sort(key=lambda r: (r["group"], r["concept"], r["series_id"]))
     catalog_path.parent.mkdir(parents=True, exist_ok=True)
     with catalog_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=CATALOG_FIELDS)
