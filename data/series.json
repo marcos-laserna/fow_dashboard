@@ -1,13 +1,24 @@
 {
-  "ine": {
-    "table_id": "75808",
-    "series_name_contains": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice",
-    "series_id": "ine_retail_sales_madrid",
-    "label": "Índice de ventas minoristas — Madrid",
-    "unit": "Índice (2021=100)",
-    "frequency": "M"
+  "groups": {
+    "retail": "Ventas minoristas",
+    "ipc": "IPC · precios",
+    "icm": "ICM · comercio minorista",
+    "iass": "IASS · servicios",
+    "ipi": "IPI · industria",
+    "eurostat": "Eurostat · UE",
+    "manual": "Excel manuales"
   },
-  "ine_indicators": [
+  "sources": [
+    {
+      "table_id": "75808",
+      "series_name_contains": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice",
+      "series_id": "ine_retail_sales_madrid",
+      "label": "Índice de ventas minoristas — Madrid",
+      "unit": "Índice (2021=100)",
+      "frequency": "M",
+      "type": "ine_series",
+      "group": "retail"
+    },
     {
       "table_id": "60288",
       "series_id": "ine_iass_raw",
@@ -17,7 +28,9 @@
         "indice general",
         "total servicios",
         "sector servicios de mercado"
-      ]
+      ],
+      "type": "ine_general_index",
+      "group": "iass"
     },
     {
       "table_id": "60289",
@@ -28,7 +41,9 @@
         "indice general",
         "total servicios",
         "sector servicios de mercado"
-      ]
+      ],
+      "type": "ine_general_index",
+      "group": "iass"
     },
     {
       "table_id": "60290",
@@ -39,7 +54,9 @@
         "indice general",
         "total servicios",
         "sector servicios de mercado"
-      ]
+      ],
+      "type": "ine_general_index",
+      "group": "iass"
     },
     {
       "table_id": "60272",
@@ -50,7 +67,9 @@
         "total industria",
         "indice general",
         "general"
-      ]
+      ],
+      "type": "ine_general_index",
+      "group": "ipi"
     },
     {
       "table_id": "60276",
@@ -61,7 +80,9 @@
         "total industria",
         "indice general",
         "general"
-      ]
+      ],
+      "type": "ine_general_index",
+      "group": "ipi"
     },
     {
       "table_id": "60280",
@@ -72,10 +93,10 @@
         "total industria",
         "indice general",
         "general"
-      ]
-    }
-  ],
-  "ine_catalogs": [
+      ],
+      "type": "ine_general_index",
+      "group": "ipi"
+    },
     {
       "table_id": "76125",
       "family": "ipc",
@@ -83,7 +104,7 @@
         {
           "series_id": "IPC251852",
           "label": "Nacional. Índice general. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -107,7 +128,7 @@
         {
           "series_id": "IPC251859",
           "label": "Nacional. Alimentos y bebidas no alcohólicas. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -131,7 +152,7 @@
         {
           "series_id": "IPC251864",
           "label": "Nacional. Bebidas alcohólicas y tabaco. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -155,7 +176,7 @@
         {
           "series_id": "IPC251869",
           "label": "Nacional. Vestido y calzado. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -179,7 +200,7 @@
         {
           "series_id": "IPC251874",
           "label": "Nacional. Vivienda, agua, electricidad, gas y otros combustibles. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -203,7 +224,7 @@
         {
           "series_id": "IPC251879",
           "label": "Nacional. Muebles, artículos del hogar y artículos para el mantenimiento corriente del hogar. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -227,7 +248,7 @@
         {
           "series_id": "IPC251884",
           "label": "Nacional. Sanidad. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -251,7 +272,7 @@
         {
           "series_id": "IPC251889",
           "label": "Nacional. Transporte. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -275,7 +296,7 @@
         {
           "series_id": "IPC251894",
           "label": "Nacional. Comunicaciones. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -299,7 +320,7 @@
         {
           "series_id": "IPC251899",
           "label": "Nacional. Ocio y cultura. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -323,7 +344,7 @@
         {
           "series_id": "IPC251904",
           "label": "Nacional. Enseñanza. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -347,7 +368,7 @@
         {
           "series_id": "IPC251842",
           "label": "Nacional. Restaurantes y hoteles. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -371,7 +392,7 @@
         {
           "series_id": "IPC251847",
           "label": "Nacional. Otros bienes y servicios. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "ipc"
         },
         {
@@ -392,7 +413,9 @@
           "unit": "Porcentaje",
           "family": "ipc"
         }
-      ]
+      ],
+      "type": "ine_catalog",
+      "group": "ipc"
     },
     {
       "table_id": "75808",
@@ -401,7 +424,7 @@
         {
           "series_id": "ICM3821",
           "label": "Total Nacional. Cifra de negocio a precios constantes. General. Comercio al por menor, excepto de vehículos de motor y motocicletas. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -425,7 +448,7 @@
         {
           "series_id": "ICM3790",
           "label": "Total Nacional. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -449,7 +472,7 @@
         {
           "series_id": "ICM4441",
           "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -473,7 +496,7 @@
         {
           "series_id": "ICM4440",
           "label": "Andalucía. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -497,7 +520,7 @@
         {
           "series_id": "ICM4439",
           "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -521,7 +544,7 @@
         {
           "series_id": "ICM4438",
           "label": "Aragón. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -545,7 +568,7 @@
         {
           "series_id": "ICM4437",
           "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -569,7 +592,7 @@
         {
           "series_id": "ICM4436",
           "label": "Asturias, Principado de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -593,7 +616,7 @@
         {
           "series_id": "ICM4435",
           "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -617,7 +640,7 @@
         {
           "series_id": "ICM4434",
           "label": "Balears, Illes. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -641,7 +664,7 @@
         {
           "series_id": "ICM4433",
           "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -665,7 +688,7 @@
         {
           "series_id": "ICM4432",
           "label": "Canarias. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -689,7 +712,7 @@
         {
           "series_id": "ICM4431",
           "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -713,7 +736,7 @@
         {
           "series_id": "ICM4430",
           "label": "Cantabria. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -737,7 +760,7 @@
         {
           "series_id": "ICM4429",
           "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -761,7 +784,7 @@
         {
           "series_id": "ICM4428",
           "label": "Castilla y León. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -785,7 +808,7 @@
         {
           "series_id": "ICM4427",
           "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -809,7 +832,7 @@
         {
           "series_id": "ICM4426",
           "label": "Castilla - La Mancha. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -833,7 +856,7 @@
         {
           "series_id": "ICM4425",
           "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -857,7 +880,7 @@
         {
           "series_id": "ICM4424",
           "label": "Cataluña. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -881,7 +904,7 @@
         {
           "series_id": "ICM4423",
           "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -905,7 +928,7 @@
         {
           "series_id": "ICM4422",
           "label": "Comunitat Valenciana. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -929,7 +952,7 @@
         {
           "series_id": "ICM4421",
           "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -953,7 +976,7 @@
         {
           "series_id": "ICM4420",
           "label": "Extremadura. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -977,7 +1000,7 @@
         {
           "series_id": "ICM4419",
           "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1001,7 +1024,7 @@
         {
           "series_id": "ICM4418",
           "label": "Galicia. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1025,7 +1048,7 @@
         {
           "series_id": "ICM4417",
           "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1049,7 +1072,7 @@
         {
           "series_id": "ICM4416",
           "label": "Madrid, Comunidad de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1073,7 +1096,7 @@
         {
           "series_id": "ICM4415",
           "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1097,7 +1120,7 @@
         {
           "series_id": "ICM4414",
           "label": "Murcia, Región de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1121,7 +1144,7 @@
         {
           "series_id": "ICM4413",
           "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1145,7 +1168,7 @@
         {
           "series_id": "ICM4412",
           "label": "Navarra, Comunidad Foral de. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1169,7 +1192,7 @@
         {
           "series_id": "ICM4411",
           "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1193,7 +1216,7 @@
         {
           "series_id": "ICM4410",
           "label": "País Vasco. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1217,7 +1240,7 @@
         {
           "series_id": "ICM4409",
           "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1241,7 +1264,7 @@
         {
           "series_id": "ICM4408",
           "label": "Rioja, La. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1265,7 +1288,7 @@
         {
           "series_id": "ICM4407",
           "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1289,7 +1312,7 @@
         {
           "series_id": "ICM4406",
           "label": "Ceuta. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1313,7 +1336,7 @@
         {
           "series_id": "ICM4405",
           "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor, excepto de vehículos de motor y motocicletas. General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1337,7 +1360,7 @@
         {
           "series_id": "ICM4404",
           "label": "Melilla. Cifra de negocio a precios constantes. Comercio al por menor sin Estaciones de Servicio (47 sin 473). General. Índice.",
-          "unit": "?ndice",
+          "unit": "Índice",
           "family": "icm"
         },
         {
@@ -1358,11 +1381,72 @@
           "unit": "Porcentaje",
           "family": "icm"
         }
-      ]
+      ],
+      "type": "ine_catalog",
+      "group": "icm"
+    },
+    {
+      "type": "eurostat",
+      "dataset": "une_rt_m",
+      "filters": {
+        "geo": "ES",
+        "s_adj": "SA",
+        "age": "TOTAL",
+        "sex": "T",
+        "unit": "PC_ACT"
+      },
+      "series_id": "EUR_UNE_RT_M_ES",
+      "label": "Tasa de paro (SA) — España",
+      "unit": "% población activa",
+      "frequency": "M",
+      "group": "eurostat"
+    },
+    {
+      "type": "eurostat",
+      "dataset": "une_rt_m",
+      "filters": {
+        "geo": "EA21",
+        "s_adj": "SA",
+        "age": "TOTAL",
+        "sex": "T",
+        "unit": "PC_ACT"
+      },
+      "series_id": "EUR_UNE_RT_M_EA",
+      "label": "Tasa de paro (SA) — Zona euro",
+      "unit": "% población activa",
+      "frequency": "M",
+      "group": "eurostat"
+    },
+    {
+      "type": "eurostat",
+      "dataset": "prc_hicp_minr",
+      "filters": {
+        "geo": "ES",
+        "coicop18": "TOTAL",
+        "unit": "RCH_A"
+      },
+      "series_id": "EUR_HICP_RCH_A_ES",
+      "label": "IPCA tasa anual — España",
+      "unit": "%",
+      "frequency": "M",
+      "group": "eurostat"
+    },
+    {
+      "type": "eurostat",
+      "dataset": "prc_hicp_minr",
+      "filters": {
+        "geo": "EA21",
+        "coicop18": "TOTAL",
+        "unit": "RCH_A"
+      },
+      "series_id": "EUR_HICP_RCH_A_EA",
+      "label": "IPCA tasa anual — Zona euro",
+      "unit": "%",
+      "frequency": "M",
+      "group": "eurostat"
     }
   ],
   "manual": {
-    "default_series_id": "manual_series",
     "default_label": "Serie del Excel",
     "default_unit": ""
   }
