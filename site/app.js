@@ -260,6 +260,8 @@ function seriesTraces(sel, i, from, to) {
   }
   return { out, missing };
 }
+// Official rates are separate series with their own code (IPC251861 is the m/m of IPC251859).
+const traceCode = (t) => (t.origin === 'oficial' ? t.src.series_id : t.sel.id);
 const traceLabel = (t) => (t.kind === 'level' ? 'Nivel' : `${MEASURE_LABELS[t.kind] || TRANSFORM_LABELS[t.kind]}`);
 const originLabel = (t) => ({ pub: '', oficial: ' (oficial)', calc: ' (calc.)' }[t.origin]);
 const traceUnit = (t) => (t.kind === 'level' ? t.s.unit || 'Nivel' : t.kind === 'diff' ? `Dif. (${t.s.unit || 'unid.'})` : t.kind === 'rebase' ? 'Base 100' : '%');
@@ -307,7 +309,7 @@ function renderSelected({ traces, missing }) {
   $('selected').querySelector('tbody').innerHTML = state.selected.map((sel, i) => {
     const s = state.byId.get(sel.id);
     const mine = traces.filter((t) => t.sel === sel);
-    const shown = mine.map((t) => `<span class="${t.origin === 'calc' ? 'muted' : ''}" title="${t.src && t.src !== s ? esc(t.src.series_id) : ''}">${esc(traceLabel(t))}${originLabel(t)}</span>`)
+    const shown = mine.map((t) => `<span class="${t.origin === 'calc' ? 'muted' : ''}">${esc(traceLabel(t))}${t.origin === 'oficial' ? ` <span class="code">${esc(t.src.series_id)}</span>` : originLabel(t)}</span>`)
       .concat((missing.get(sel.id) || []).map((k) => `<span class="warn" title="La fuente no publica esta tasa">${esc(TRANSFORM_SHORT[k])}: no publicada</span>`))
       .join(' · ');
     const sides = [...new Set(mine.map((t) => t.axis))].map((a) => (a === 'y' ? 'izq.' : 'dcha.')).join('/');
@@ -349,7 +351,7 @@ function renderChart({ traces }) {
   const multi = state.transforms.length > 1;
   const axisStyle = { showline: true, linecolor: '#111', ticks: 'outside', tickcolor: '#111', mirror: false, zeroline: false };
   const plotted = traces.map((t) => {
-    const name = `${t.sel.id}${multi || t.kind !== 'level' ? ` · ${traceLabel(t)}` : ''}${t.axis === 'y2' ? ' (dcha.)' : ''}`;
+    const name = `${traceCode(t)}${multi || t.kind !== 'level' ? ` · ${traceLabel(t)}${t.origin === 'calc' ? ' calc.' : ''}` : ''}${t.axis === 'y2' ? ' (dcha.)' : ''}`;
     return {
       x: t.pts.map(([p]) => toDate(p)), y: t.pts.map(([, v]) => (v == null ? null : +v)),
       name, yaxis: t.axis, type: 'scatter', mode: 'lines',
@@ -408,7 +410,7 @@ function wideTable() {
   const periods = [...new Set(traces.flatMap((t) => t.pts.map(([p]) => p)))].sort();
   const maps = traces.map((t) => new Map(t.pts));
   return [
-    ['period', ...traces.map((t) => (t.kind === 'level' ? t.sel.id : `${t.sel.id} ${TRANSFORM_SHORT[t.kind]}`))],
+    ['period', ...traces.map((t) => (t.origin !== 'calc' ? traceCode(t) : `${t.sel.id} ${TRANSFORM_SHORT[t.kind]} calc.`))],
     ['descripcion', ...traces.map((t) => `${t.s.concept}${t.s.variant ? ' · ' + t.s.variant : ''}`)],
     ['mostrado_como', ...traces.map((t) => `${traceUnit(t)}${t.kind === 'level' ? '' : ' · ' + traceLabel(t)}${originLabel(t)}`)],
     ['serie_origen', ...traces.map((t) => (t.src || t.s).series_id)],

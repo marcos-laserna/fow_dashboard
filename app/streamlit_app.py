@@ -484,9 +484,15 @@ def trace_unit(t: dict) -> str:
     return "Base 100" if t["kind"] == "rebase" else "%"
 
 
+def trace_code(t: dict) -> str:
+    """Official rates are separate series with their own code (IPC251861 is the m/m of IPC251859)."""
+    return t["src"] if t["origin"] == "oficial" else t["sid"]
+
+
 def trace_name(t: dict) -> str:
     multi = len(kinds) > 1 or t["kind"] != "level"
-    return t["sid"] + (f" · {trace_label(t)}" if multi else "") + (" (dcha.)" if t["axis"] == "y2" else "")
+    label = f" · {trace_label(t)}" + (" calc." if t["origin"] == "calc" else "") if multi else ""
+    return trace_code(t) + label + (" (dcha.)" if t["axis"] == "y2" else "")
 
 
 # ---------- work area: selected grid + view bar + chart ----------
@@ -527,7 +533,9 @@ with work:
                                       unsafe_allow_html=True)
                     else:
                         c[7].markdown(f'<span class="muted">{ADJ_SHORT[adj] if adj != "nsa" else "—"}</span>', unsafe_allow_html=True)
-                shown = [f'<span class="{"muted" if t["origin"] == "calc" else ""}">{html.escape(trace_label(t) + origin_label(t))}</span>'
+                shown = [f'<span class="{"muted" if t["origin"] == "calc" else ""}">{html.escape(trace_label(t))}'
+                         + (f' <span class="code">{html.escape(t["src"])}</span>' if t["origin"] == "oficial"
+                            else html.escape(origin_label(t))) + "</span>"
                          for t in mine]
                 shown += [f'<span class="warn">{TRANSFORM_SHORT[k]}: no publicada</span>' for k in missing.get(sid, [])]
                 c[8].markdown(" · ".join(shown), unsafe_allow_html=True)
@@ -608,7 +616,7 @@ with work:
             st.markdown(f'<div class="chart-source">Fuente: {html.escape(", ".join(sources) + note)}</div>', unsafe_allow_html=True)
 
     if traces:
-        cols = [t["sid"] if t["kind"] == "level" else f'{t["sid"]} {TRANSFORM_SHORT[t["kind"]]}' for t in traces]
+        cols = [trace_code(t) if t["origin"] != "calc" else f'{t["sid"]} {TRANSFORM_SHORT[t["kind"]]} calc.' for t in traces]
         table = pd.DataFrame({c: t["s"] for c, t in zip(cols, traces)}).sort_index()
         table.index = table.index.strftime("%Y-%m")
         table.index.name = "period"
