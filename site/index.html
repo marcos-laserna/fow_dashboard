@@ -27,6 +27,14 @@
     </label>
     <label>Desde <input id="from" type="month"></label>
     <label>Hasta <input id="to" type="month"></label>
+    <span id="adjust-bar" class="seg-label" hidden>Ajuste (todas)
+      <span class="seg">
+        <button type="button" data-adj="nsa" title="Serie original publicada">Orig.</button>
+        <button type="button" data-adj="cal" title="Corregida de efectos de calendario">Cal.</button>
+        <button type="button" data-adj="sa" title="Corregida de efectos estacionales y de calendario">Desest.</button>
+        <button type="button" data-adj="trend" title="Tendencia">Tend.</button>
+      </span>
+    </span>
     <span class="sep"></span>
     <button id="dl-csv" type="button">Exportar CSV</button>
     <button id="dl-xlsx" type="button">Exportar Excel</button>
@@ -46,7 +54,7 @@
       <table id="selected">
         <thead><tr>
           <th></th><th>Código</th><th>Descripción</th><th>Frec.</th><th>Inicio</th><th>Fin</th>
-          <th class="num">Último</th><th>Medida</th><th>Mostrado como</th><th>Eje</th><th></th>
+          <th class="num">Último</th><th>Medida</th><th>Ajuste</th><th>Mostrado como</th><th>Eje</th><th></th>
         </tr></thead>
         <tbody></tbody>
       </table>

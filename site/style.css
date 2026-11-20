@@ -5,6 +5,7 @@
   font-family: "Segoe UI", Tahoma, Arial, sans-serif; font-size: 12px; color-scheme: light;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: #fff; color: var(--ink); height: 100vh; display: flex; flex-direction: column; }
 
 .titlebar { display: flex; gap: 14px; align-items: baseline; padding: 6px 12px;
@@ -39,10 +40,23 @@ aside { border-right: 1px solid var(--rule); display: flex; flex-direction: colu
 .lvl1 { padding-left: 20px; }
 .lvl2 { padding-left: 38px; }
 .leaf { padding-left: 38px; display: grid; grid-template-columns: 14px 132px 1fr auto; gap: 6px; }
+.leaf .lbl { overflow: hidden; text-overflow: ellipsis; }
+.tags { display: flex; gap: 3px; }
 .leaf.on { background: var(--select); }
 .code { font-family: Consolas, "Courier New", monospace; color: var(--navy); overflow: hidden; text-overflow: ellipsis; }
 .tag { font-size: 10px; padding: 0 4px; border: 1px solid var(--rule); border-radius: 2px; color: var(--muted); }
 .tag.tx { border-color: #b7791f; color: #8a5a10; background: #fff8e8; }
+.tag.adj { border-color: #7d93bd; color: var(--navy); background: #eef3fb; }
+.muted { color: var(--muted); }
+
+/* segmented control: published versions (original / calendar / seasonally adjusted) */
+.seg-label { display: flex; gap: 5px; align-items: center; }
+.seg { display: inline-flex; }
+.seg button { border-radius: 0; margin-left: -1px; padding: 1px 7px; background: #fff; }
+.seg button:first-child { border-radius: 2px 0 0 2px; margin-left: 0; }
+.seg button:last-child { border-radius: 0 2px 2px 0; }
+.seg button.on { background: var(--navy); border-color: var(--navy); color: #fff; position: relative; }
+td .seg button { font-size: 11px; padding: 0 6px; }
 
 /* work area */
 .work { overflow: auto; min-width: 0; }

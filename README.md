@@ -34,6 +34,19 @@ y después vuelve a publicar Pages.
 Para añadir una serie: una entrada en `sources` de `data/series.json` (tipos
 `ine_series`, `ine_general_index`, `ine_catalog`, `eurostat`) o un Excel en `data/manual/`.
 
+### Versiones publicadas (original / calendario / desestacionalizada)
+
+El dashboard no desestacionaliza nada: usa las versiones que ya publica la fuente.
+`pipeline/classify.py` lee del nombre de cada serie qué versión es (columna
+`adjustment`: `nsa` original, `cal` corregida de calendario, `sa` desestacionalizada,
+`trend` tendencia) y su nombre sin esa coletilla (columna `base`). Las series con el
+mismo `group` y `base` son versiones de la misma serie; en ambas interfaces se cambia
+entre ellas con el selector *Ajuste* de cada fila o con *Ajuste (todas)* en la barra.
+
+Para que dos series queden enlazadas, descarga todas sus versiones (como hacen IASS e
+IPI). Si el nombre no lo deja claro, fíjalo en `data/series.json` con
+`"adjustment": "sa"` y un `"base"` común.
+
 ## Tests
 
 ```bash

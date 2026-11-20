@@ -11,12 +11,17 @@ const GROUP_LABELS = {
   manual: 'Excel manuales', other: 'Otros',
 };
 const MEASURE_LABELS = { level: 'Nivel', pct: '% m/m', yoy: '% a/a', ytd: '% acum. año' };
+// Published versions of the same series (detected by pipeline/classify.py).
+const ADJ_ORDER = ['nsa', 'cal', 'sa', 'trend'];
+const ADJ_LABELS = { nsa: 'Original', cal: 'Corr. calendario', sa: 'Desestacionalizada', trend: 'Tendencia' };
+const ADJ_SHORT = { nsa: 'Orig.', cal: 'Cal.', sa: 'Desest.', trend: 'Tend.' };
 const TRANSFORM_LABELS = {
   level: 'Nivel', pct: '% periodo anterior', yoy: '% interanual', diff: 'Diferencia', rebase: 'Base 100',
 };
 
 const state = {
   catalog: [], byId: new Map(), obs: new Map(),
+  versions: new Map(),   // "group|base" -> series sorted by ADJ_ORDER (only when >1)
   selected: [],          // [{id, axis: 'y' | 'y2'}]
   open: new Set(),       // expanded tree nodes ("g:ipc", "c:ipc|Nacional. Índice general")
 };
@@ -77,6 +82,61 @@ function transform(points, kind, fromMonth) {
 const effectiveKind = (s) => (s.measure === 'level' ? $('transform').value : 'level');
 const shownAs = (s) => (s.measure === 'level' ? TRANSFORM_LABELS[$('transform').value] : `${MEASURE_LABELS[s.measure]} (origen)`);
 
+// ---------- seasonal-adjustment versions ----------
+const versionsOf = (s) => (s ? state.versions.get(`${s.group}|${s.base}`) || [] : []);
+function indexVersions(catalog) {
+  const fam = new Map();
+  for (const s of catalog) {
+    if (!s.base) continue;
+    const k = `${s.group}|${s.base}`;
+    if (!fam.has(k)) fam.set(k, []);
+    fam.get(k).push(s);
+  }
+  for (const [k, list] of fam) {
+    // Only a family where each adjustment appears once is unambiguous.
+    if (list.length > 1 && new Set(list.map((s) => s.adjustment)).size === list.length) {
+      state.versions.set(k, list.sort((a, b) => ADJ_ORDER.indexOf(a.adjustment) - ADJ_ORDER.indexOf(b.adjustment)));
+    }
+  }
+}
+// Replace a selected series by another version of it, keeping its axis and colour slot.
+function swapVersion(fromId, toId) {
+  if (fromId === toId || state.selected.some((x) => x.id === toId)) return false;
+  const sel = state.selected.find((x) => x.id === fromId);
+  if (!sel) return false;
+  sel.id = toId;
+  return true;
+}
+function swapAll(adj) {
+  let changed = 0, missing = 0;
+  for (const sel of [...state.selected]) {
+    const vs = versionsOf(state.byId.get(sel.id));
+    if (!vs.length) continue;
+    const target = vs.find((v) => v.adjustment === adj);
+    if (!target) { missing++; continue; }
+    if (swapVersion(sel.id, target.series_id)) changed++;
+  }
+  update();
+  setStatus(`${ADJ_LABELS[adj]}: ${changed} serie(s) cambiada(s)` + (missing ? ` · ${missing} sin esa versión` : ''));
+}
+function adjCell(s) {
+  const vs = versionsOf(s);
+  if (!vs.length) return `<span class="muted">${s.adjustment !== 'nsa' ? ADJ_SHORT[s.adjustment] : '—'}</span>`;
+  return `<span class="seg">${vs.map((v) => `<button type="button" class="${v.series_id === s.series_id ? 'on' : ''}"
+    data-swap="${esc(s.series_id)}" data-to="${esc(v.series_id)}"
+    title="${esc(ADJ_LABELS[v.adjustment])} · ${esc(v.series_id)}">${ADJ_SHORT[v.adjustment]}</button>`).join('')}</span>`;
+}
+function renderAdjustBar() {
+  const withVersions = state.selected.map((x) => state.byId.get(x.id)).filter((s) => versionsOf(s).length);
+  $('adjust-bar').hidden = withVersions.length === 0;
+  const available = new Set(withVersions.flatMap((s) => versionsOf(s).map((v) => v.adjustment)));
+  const current = new Set(withVersions.map((s) => s.adjustment));
+  for (const b of $('adjust-bar').querySelectorAll('button')) {
+    b.hidden = !available.has(b.dataset.adj);
+    b.classList.toggle('on', current.size === 1 && current.has(b.dataset.adj));
+  }
+}
+
 // ---------- tree: group → concept → series ----------
 function buildTree(rows) {
   const groups = new Map();
@@ -91,18 +151,19 @@ function buildTree(rows) {
 
 function leafHtml(s, sel) {
   const on = sel.has(s.series_id);
-  const tag = s.measure === 'level' ? '' : `<span class="tag tx" title="La fuente ya publica esta serie transformada">${MEASURE_LABELS[s.measure]}</span>`;
+  const tag = (s.measure === 'level' ? '' : `<span class="tag tx" title="La fuente ya publica esta serie transformada">${MEASURE_LABELS[s.measure]}</span>`)
+    + (versionsOf(s).length || s.adjustment !== 'nsa' ? `<span class="tag adj" title="${esc(ADJ_LABELS[s.adjustment])}">${ADJ_SHORT[s.adjustment]}</span>` : '');
   return `<div class="node leaf ${on ? 'on' : ''}" data-id="${esc(s.series_id)}" role="treeitem" aria-selected="${on}"
       title="${esc(s.series_name)} · ${esc(s.source)} · ${s.first_period}–${s.last_period}">
     <input type="checkbox" tabindex="-1" ${on ? 'checked' : ''}>
     <span class="code">${esc(s.series_id)}</span>
-    <span>${esc(s.variant || s.series_name)}</span>${tag}</div>`;
+    <span class="lbl">${esc(s.variant || s.series_name)}</span><span class="tags">${tag}</span></div>`;
 }
 
 function renderTree() {
   const terms = $('search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const rows = state.catalog.filter((s) =>
-    terms.every((t) => `${s.series_id} ${s.series_name} ${s.source} ${GROUP_LABELS[s.group] || s.group}`.toLowerCase().includes(t)));
+    terms.every((t) => `${s.series_id} ${s.series_name} ${s.source} ${GROUP_LABELS[s.group] || s.group} ${ADJ_LABELS[s.adjustment]}`.toLowerCase().includes(t)));
   const searching = terms.length > 0;
   const sel = new Set(state.selected.map((s) => s.id));
   let html = '';
@@ -155,6 +216,7 @@ function renderSelected(data) {
       <td>${d.s.frequency}</td><td>${d.s.first_period}</td><td>${d.s.last_period}</td>
       <td class="num">${fmt(+d.s.last_value)}</td>
       <td>${MEASURE_LABELS[d.s.measure] || '—'}</td>
+      <td>${adjCell(d.s)}</td>
       <td>${esc(shownAs(d.s))}</td>
       <td><button type="button" data-axis="${esc(d.id)}">${d.axis === 'y' ? 'Izq.' : 'Der.'}</button></td>
       <td><button type="button" data-remove="${esc(d.id)}" aria-label="Quitar">✕</button></td>
@@ -197,6 +259,7 @@ function update() {
   const data = visibleData();
   renderSelected(data);
   renderChart(data);
+  renderAdjustBar();
   renderTree();
   const params = new URLSearchParams(); // shareable view: #s=ID1,ID2:r&t=yoy&from=2020-01
   if (state.selected.length) params.set('s', state.selected.map((s) => s.id + (s.axis === 'y2' ? ':r' : '')).join(','));
@@ -257,8 +320,12 @@ async function init() {
   try {
     if (typeof Plotly === 'undefined') throw new Error('no se pudo cargar la librería de gráficos (Plotly)');
     const [catalog, obs] = await Promise.all([loadCsv('catalog.csv'), loadCsv('observations.csv')]);
-    for (const s of catalog) { s.concept ||= s.series_name; s.measure ||= 'level'; s.variant ||= ''; }
+    for (const s of catalog) {
+      s.concept ||= s.series_name; s.measure ||= 'level'; s.variant ||= '';
+      s.adjustment ||= 'nsa'; s.base ||= '';
+    }
     state.catalog = catalog;
+    indexVersions(catalog);
     state.byId = new Map(catalog.map((s) => [s.series_id, s]));
     for (const r of obs) {
       if (!state.obs.has(r.series_id)) state.obs.set(r.series_id, []);
@@ -284,12 +351,17 @@ $('tree').addEventListener('click', (e) => {
   renderTree();
 });
 $('selected').addEventListener('click', (e) => {
-  const { axis, remove } = e.target.dataset;
+  const { axis, remove, swap, to } = e.target.dataset;
+  if (swap) {
+    if (swap !== to && !swapVersion(swap, to)) setStatus('Esa versión ya está seleccionada.');
+    return update();
+  }
   if (axis) { const s = state.selected.find((x) => x.id === axis); s.axis = s.axis === 'y' ? 'y2' : 'y'; update(); }
   if (remove) toggleSeries(remove);
 });
 ['transform', 'from', 'to'].forEach((id) => $(id).addEventListener('change', update));
 $('dl-csv').addEventListener('click', () => download('csv'));
 $('dl-xlsx').addEventListener('click', () => download('xlsx'));
+$('adjust-bar').addEventListener('click', (e) => { if (e.target.dataset.adj) swapAll(e.target.dataset.adj); });
 $('clear').addEventListener('click', () => { state.selected = []; update(); });
 init();

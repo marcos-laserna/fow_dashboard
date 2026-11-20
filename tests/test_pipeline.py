@@ -97,7 +97,7 @@ def test_manual_long_wide_and_error(tmp_path):
 def test_store_rebuild_catalog(tmp_path):
     obs = tmp_path / "observations.csv"
     cat = tmp_path / "catalog.csv"
-    with obs.open("w") as f:
+    with obs.open("w", encoding="utf-8") as f:
         w = csv.DictWriter(
             f,
             fieldnames=[
@@ -139,11 +139,11 @@ def test_store_rebuild_catalog(tmp_path):
         for p, v in [("2024-01", "1"), ("2024-02", "2")]
     ]
     merge_write(rows, obs, cat, {"XL_A_S": "manual"}, cat)
-    data = list(csv.DictReader(obs.open()))
+    data = list(csv.DictReader(obs.open(encoding="utf-8")))
     assert {x["series_id"] for x in data} == {"old", "XL_A_S"} and next(
         x for x in data if x["series_id"] == "old"
     )["unit"] == "Índice"
-    c = {x["series_id"]: x for x in csv.DictReader(cat.open())}["XL_A_S"]
+    c = {x["series_id"]: x for x in csv.DictReader(cat.open(encoding="utf-8"))}["XL_A_S"]
     assert (c["first_period"], c["last_period"], c["n_obs"], c["group"]) == (
         "2024-01",
         "2024-02",
@@ -187,7 +187,7 @@ def test_ine_series_monthly_period():
 def test_store_migrates_legacy_daily_monthly_periods(tmp_path):
     obs = tmp_path / "observations.csv"
     cat = tmp_path / "catalog.csv"
-    with obs.open("w") as f:
+    with obs.open("w", encoding="utf-8") as f:
         w = csv.DictWriter(
             f,
             fieldnames=[
@@ -230,7 +230,7 @@ def test_store_migrates_legacy_daily_monthly_periods(tmp_path):
         obs,
         cat,
     )
-    data = list(csv.DictReader(obs.open()))
+    data = list(csv.DictReader(obs.open(encoding="utf-8")))
     assert [(r["period"], r["value"]) for r in data] == [("2024-03", "6")]
 
 
@@ -260,6 +260,46 @@ def test_classify_groups_siblings_and_flags_transformed():
         "concept": "IASS",
         "variant": "Original (60288)",
         "measure": "level",
+        "adjustment": "nsa",
+        "base": "iass",
     }
     assert classify("Tasa de paro (SA) — España")["concept"] == "Tasa de paro (SA)"
     assert classify("SIMULADA - serie Excel")["variant"] == ""
+
+
+def test_classify_links_published_versions_of_a_series():
+    from pipeline.classify import classify
+
+    names = {
+        "IASS · Original (60288)": "nsa",
+        "IASS · Ajustado calendario (60289)": "cal",
+        "IASS · Ajustado calendario y estacionalidad (60290)": "sa",
+    }
+    got = {n: classify(n) for n in names}
+    assert {n: c["adjustment"] for n, c in got.items()} == names
+    assert {c["base"] for c in got.values()} == {"iass"}
+    # INE wording in catalog tables
+    a = classify("Total Nacional. General. Datos corregidos de efectos estacionales y de calendario. Índice.")
+    b = classify("Total Nacional. General. Datos corregidos de efectos de calendario. Índice.")
+    c = classify("Total Nacional. General. Datos originales. Índice.")
+    d = classify("Total Nacional. General. Tendencia. Índice.")
+    assert [x["adjustment"] for x in (a, b, c, d)] == ["sa", "cal", "nsa", "trend"]
+    assert len({x["base"] for x in (a, b, c, d)}) == 1
+    # Rates keep their own family: an annual rate is not a version of the index.
+    assert classify("Total Nacional. General. Datos originales. Variación anual.")["base"] != c["base"]
+    assert classify("Tasa de paro (SA) — España")["adjustment"] == "sa"
+    assert classify("Nacional. Índice general. Índice.")["adjustment"] == "nsa"
+
+
+def test_store_writes_adjustment_columns(tmp_path):
+    obs, cat = tmp_path / "o.csv", tmp_path / "c.csv"
+    rows = [
+        dict(series_id=sid, series_name=name, source="INE", period="2024-01",
+             value="1", unit="", frequency="M", retrieved_at="now")
+        for sid, name in [("raw", "IPI · Original (60272)"),
+                          ("sa", "IPI · Ajustado calendario y estacionalidad (60280)")]
+    ]
+    merge_write(rows, obs, cat, {"raw": "ipi", "sa": "ipi"}, cat, {"raw": {"adjustment": "trend"}})
+    c = {x["series_id"]: x for x in csv.DictReader(cat.open(encoding="utf-8"))}
+    assert (c["sa"]["adjustment"], c["sa"]["base"]) == ("sa", "ipi")
+    assert c["raw"]["adjustment"] == "trend"  # config override wins

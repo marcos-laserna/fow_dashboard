@@ -15,7 +15,7 @@ def main() -> int:
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     rows = []
     groups = {}
-    meta = {}  # config overrides for concept / variant / measure
+    meta = {}  # config overrides for concept / variant / measure / adjustment / base
     remote = config.get("sources", [])
     failures = 0
     for spec in remote:
@@ -26,7 +26,11 @@ def main() -> int:
             groups[item["series_id"]] = group
         if "series_id" in spec:
             groups[spec["series_id"]] = group
-        override = {k: spec[k] for k in ("concept", "variant", "measure") if k in spec}
+        override = {
+            k: spec[k]
+            for k in ("concept", "variant", "measure", "adjustment", "base")
+            if k in spec
+        }
         if override:
             for sid in [spec.get("series_id")] + [
                 i["series_id"] for i in spec.get("series", [])
