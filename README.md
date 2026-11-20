@@ -40,8 +40,10 @@ El dashboard no desestacionaliza nada: usa las versiones que ya publica la fuent
 `pipeline/classify.py` lee del nombre de cada serie qué versión es (columna
 `adjustment`: `nsa` original, `cal` corregida de calendario, `sa` desestacionalizada,
 `trend` tendencia) y su nombre sin esa coletilla (columna `base`). Las series con el
-mismo `group` y `base` son versiones de la misma serie; en ambas interfaces se cambia
-entre ellas con el selector *Ajuste* de cada fila o con *Ajuste (todas)* en la barra.
+mismo `group` y `base` son versiones de la misma serie. En ambas interfaces, encima del
+gráfico, *Ajuste estacional* (Todas / Original / Corr. calendario / Desestacionalizada)
+cambia las series seleccionadas a esa versión y filtra el catálogo para que las que
+añadas entren ya en ella; cada fila tiene además su propio selector.
 
 Para que dos series queden enlazadas, descarga todas sus versiones (como hacen IASS e
 IPI). Si el nombre no lo deja claro, fíjalo en `data/series.json` con

@@ -69,6 +69,16 @@ td.desc { white-space: normal; min-width: 220px; }
 td button { padding: 0 6px; font-size: 11px; }
 #empty { color: var(--muted); padding: 8px; margin: 0; }
 
+/* view bar: how the chart shows the data, right above it */
+.viewbar { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; margin: 12px 12px 0;
+  padding: 8px 10px; background: var(--bar); border: 1px solid var(--rule); }
+.vgroup { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.vlabel { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.viewbar .seg button { padding: 3px 10px; }
+#view-hint { flex-basis: 100%; color: var(--muted); font-size: 11px; }
+.warn { color: #8a5a10; }
+.viewbar + .chart-box { margin-top: 0; border-top: 0; }
+
 .chart-box { margin: 12px; border: 1px solid var(--rule); padding: 12px 14px 8px; }
 #chart-title { font-size: 14px; font-weight: 600; }
 #chart-sub { color: var(--muted); margin-top: 2px; }

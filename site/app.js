@@ -18,9 +18,18 @@ const ADJ_SHORT = { nsa: 'Orig.', cal: 'Cal.', sa: 'Desest.', trend: 'Tend.' };
 const TRANSFORM_LABELS = {
   level: 'Nivel', pct: '% periodo anterior', yoy: '% interanual', diff: 'Diferencia', rebase: 'Base 100',
 };
+const TRANSFORM_HINTS = {
+  level: 'Valores tal como los publica la fuente.',
+  pct: 'Variación (%) respecto al periodo anterior: mes anterior en series mensuales, trimestre anterior en trimestrales.',
+  yoy: 'Variación (%) respecto al mismo periodo del año anterior.',
+  diff: 'Diferencia absoluta respecto al periodo anterior, en las unidades de la serie.',
+  rebase: 'Índice = 100 en la primera fecha visible (campo «Desde»), para comparar evoluciones.',
+};
 
 const state = {
   catalog: [], byId: new Map(), obs: new Map(),
+  transform: 'level',    // how level series are shown (rates published by the source never change)
+  adjPref: '',           // preferred published version: '' (all) | nsa | cal | sa | trend
   versions: new Map(),   // "group|base" -> series sorted by ADJ_ORDER (only when >1)
   selected: [],          // [{id, axis: 'y' | 'y2'}]
   open: new Set(),       // expanded tree nodes ("g:ipc", "c:ipc|Nacional. Índice general")
@@ -79,8 +88,8 @@ function transform(points, kind, fromMonth) {
   return points;
 }
 // Series that the source already publishes as a rate are never re-transformed.
-const effectiveKind = (s) => (s.measure === 'level' ? $('transform').value : 'level');
-const shownAs = (s) => (s.measure === 'level' ? TRANSFORM_LABELS[$('transform').value] : `${MEASURE_LABELS[s.measure]} (origen)`);
+const effectiveKind = (s) => (s.measure === 'level' ? state.transform : 'level');
+const shownAs = (s) => (s.measure === 'level' ? TRANSFORM_LABELS[state.transform] : `${MEASURE_LABELS[s.measure]} (origen)`);
 
 // ---------- seasonal-adjustment versions ----------
 const versionsOf = (s) => (s ? state.versions.get(`${s.group}|${s.base}`) || [] : []);
@@ -107,34 +116,44 @@ function swapVersion(fromId, toId) {
   sel.id = toId;
   return true;
 }
-function swapAll(adj) {
+function setAdjustment(adj) {
+  state.adjPref = adj;
+  if (!adj) { update(); return setStatus('Ajuste: se muestran todas las versiones publicadas'); }
   let changed = 0, missing = 0;
   for (const sel of [...state.selected]) {
     const vs = versionsOf(state.byId.get(sel.id));
-    if (!vs.length) continue;
+    if (!vs.length) { if (state.byId.get(sel.id).adjustment !== adj) missing++; continue; }
     const target = vs.find((v) => v.adjustment === adj);
     if (!target) { missing++; continue; }
     if (swapVersion(sel.id, target.series_id)) changed++;
   }
   update();
-  setStatus(`${ADJ_LABELS[adj]}: ${changed} serie(s) cambiada(s)` + (missing ? ` · ${missing} sin esa versión` : ''));
+  setStatus(`${ADJ_LABELS[adj]}: ${changed} serie(s) cambiada(s)` + (missing ? ` · ${missing} sin esa versión publicada` : ''));
 }
 function adjCell(s) {
   const vs = versionsOf(s);
-  if (!vs.length) return `<span class="muted">${s.adjustment !== 'nsa' ? ADJ_SHORT[s.adjustment] : '—'}</span>`;
+  if (!vs.length) {
+    if (state.adjPref && s.adjustment !== state.adjPref) {
+      return `<span class="warn" title="La fuente no publica esta serie en versión ${esc(ADJ_LABELS[state.adjPref].toLowerCase())}">${ADJ_SHORT[s.adjustment]} · sin ${ADJ_SHORT[state.adjPref].toLowerCase()}</span>`;
+    }
+    return `<span class="muted">${s.adjustment !== 'nsa' ? ADJ_SHORT[s.adjustment] : '—'}</span>`;
+  }
   return `<span class="seg">${vs.map((v) => `<button type="button" class="${v.series_id === s.series_id ? 'on' : ''}"
     data-swap="${esc(s.series_id)}" data-to="${esc(v.series_id)}"
     title="${esc(ADJ_LABELS[v.adjustment])} · ${esc(v.series_id)}">${ADJ_SHORT[v.adjustment]}</button>`).join('')}</span>`;
 }
-function renderAdjustBar() {
-  const withVersions = state.selected.map((x) => state.byId.get(x.id)).filter((s) => versionsOf(s).length);
-  $('adjust-bar').hidden = withVersions.length === 0;
-  const available = new Set(withVersions.flatMap((s) => versionsOf(s).map((v) => v.adjustment)));
-  const current = new Set(withVersions.map((s) => s.adjustment));
-  for (const b of $('adjust-bar').querySelectorAll('button')) {
-    b.hidden = !available.has(b.dataset.adj);
-    b.classList.toggle('on', current.size === 1 && current.has(b.dataset.adj));
+function renderViewBar() {
+  for (const b of $('transform-seg').querySelectorAll('button')) b.classList.toggle('on', b.dataset.t === state.transform);
+  for (const b of $('adjust-seg').querySelectorAll('button')) b.classList.toggle('on', b.dataset.adj === state.adjPref);
+  const hints = [TRANSFORM_HINTS[state.transform]];
+  const rates = state.selected.filter((x) => state.byId.get(x.id).measure !== 'level').length;
+  if (rates && state.transform !== 'level') hints.push(`${rates} serie(s) ya publicada(s) como tasa se muestran sin transformar.`);
+  if (state.adjPref) {
+    const without = state.selected.filter((x) => state.byId.get(x.id).adjustment !== state.adjPref).length;
+    hints.push(`Catálogo filtrado a la versión ${ADJ_LABELS[state.adjPref].toLowerCase()} cuando existe`
+      + (without ? `; ${without} serie(s) seleccionada(s) no la tienen.` : '.'));
   }
+  $('view-hint').textContent = hints.join(' ');
 }
 
 // ---------- tree: group → concept → series ----------
@@ -162,8 +181,14 @@ function leafHtml(s, sel) {
 
 function renderTree() {
   const terms = $('search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const rows = state.catalog.filter((s) =>
+  let rows = state.catalog.filter((s) =>
     terms.every((t) => `${s.series_id} ${s.series_name} ${s.source} ${GROUP_LABELS[s.group] || s.group} ${ADJ_LABELS[s.adjustment]}`.toLowerCase().includes(t)));
+  if (state.adjPref) { // one version per family: the preferred one when it exists
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const vs = versionsOf(rows[i]);
+      if (vs.length && rows[i].adjustment !== state.adjPref && vs.some((v) => v.adjustment === state.adjPref)) rows.splice(i, 1);
+    }
+  }
   const searching = terms.length > 0;
   const sel = new Set(state.selected.map((s) => s.id));
   let html = '';
@@ -259,11 +284,12 @@ function update() {
   const data = visibleData();
   renderSelected(data);
   renderChart(data);
-  renderAdjustBar();
+  renderViewBar();
   renderTree();
   const params = new URLSearchParams(); // shareable view: #s=ID1,ID2:r&t=yoy&from=2020-01
   if (state.selected.length) params.set('s', state.selected.map((s) => s.id + (s.axis === 'y2' ? ':r' : '')).join(','));
-  if ($('transform').value !== 'level') params.set('t', $('transform').value);
+  if (state.transform !== 'level') params.set('t', state.transform);
+  if (state.adjPref) params.set('adj', state.adjPref);
   if ($('from').value) params.set('from', $('from').value);
   if ($('to').value) params.set('to', $('to').value);
   history.replaceState(null, '', params.toString() ? `#${params}` : location.pathname);
@@ -303,7 +329,8 @@ function restoreFromHash() {
   state.selected = (params.get('s') || '').split(',').filter(Boolean)
     .map((t) => { const [id, ax] = t.split(':'); return { id, axis: ax === 'r' ? 'y2' : 'y' }; })
     .filter((s) => state.byId.has(s.id)).slice(0, MAX_SERIES);
-  if (params.get('t')) $('transform').value = params.get('t');
+  if (TRANSFORM_LABELS[params.get('t')]) state.transform = params.get('t');
+  if (ADJ_LABELS[params.get('adj')]) state.adjPref = params.get('adj');
   $('from').value = params.get('from') || '';
   $('to').value = params.get('to') || '';
   if (!state.selected.length) { // default view: unemployment Spain vs euro area
@@ -359,9 +386,10 @@ $('selected').addEventListener('click', (e) => {
   if (axis) { const s = state.selected.find((x) => x.id === axis); s.axis = s.axis === 'y' ? 'y2' : 'y'; update(); }
   if (remove) toggleSeries(remove);
 });
-['transform', 'from', 'to'].forEach((id) => $(id).addEventListener('change', update));
+['from', 'to'].forEach((id) => $(id).addEventListener('change', update));
 $('dl-csv').addEventListener('click', () => download('csv'));
 $('dl-xlsx').addEventListener('click', () => download('xlsx'));
-$('adjust-bar').addEventListener('click', (e) => { if (e.target.dataset.adj) swapAll(e.target.dataset.adj); });
+$('transform-seg').addEventListener('click', (e) => { if (e.target.dataset.t) { state.transform = e.target.dataset.t; update(); } });
+$('adjust-seg').addEventListener('click', (e) => { if (e.target.dataset.adj != null) setAdjustment(e.target.dataset.adj); });
 $('clear').addEventListener('click', () => { state.selected = []; update(); });
 init();

@@ -28,11 +28,20 @@ GROUP_LABELS = {
 MEASURE_LABELS = {"level": "Nivel", "pct": "% m/m", "yoy": "% a/a", "ytd": "% acum. año"}
 TRANSFORM_LABELS = {
     "level": "Nivel", "pct": "% periodo anterior", "yoy": "% interanual",
-    "diff": "Diferencia", "rebase": "Base 100 = inicio",
+    "diff": "Diferencia", "rebase": "Base 100",
+}
+TRANSFORM_BUTTONS = {**TRANSFORM_LABELS, "pct": "% vs. periodo anterior"}
+TRANSFORM_HINTS = {
+    "level": "Valores tal como los publica la fuente.",
+    "pct": "Variación (%) respecto al periodo anterior: mes anterior en series mensuales, trimestre anterior en trimestrales.",
+    "yoy": "Variación (%) respecto al mismo periodo del año anterior.",
+    "diff": "Diferencia absoluta respecto al periodo anterior, en las unidades de la serie.",
+    "rebase": "Índice = 100 en la primera fecha visible (campo «Desde»), para comparar evoluciones.",
 }
 ADJ_ORDER = ["nsa", "cal", "sa", "trend"]
 ADJ_LABELS = {"nsa": "Original", "cal": "Corr. calendario", "sa": "Desestacionalizada", "trend": "Tendencia"}
 ADJ_SHORT = {"nsa": "Orig.", "cal": "Cal.", "sa": "Desest.", "trend": "Tend."}
+ADJ_BUTTONS = {"": "Todas", "nsa": "Original", "cal": "Corr. calendario", "sa": "Desestacionalizada"}
 YOY_LAG = {"M": 12, "Q": 4, "A": 1}
 DEFAULT_PICK = ["EUR_UNE_RT_M_ES", "EUR_UNE_RT_M_EA"]
 
@@ -84,6 +93,16 @@ st.markdown(
     .swatch { display:inline-block; width:14px; height:3px; vertical-align:middle; }
     .muted { color:var(--muted); }
     [data-testid="stButtonGroup"] button { min-height:0; padding:1px 7px; font-size:11px; }
+
+    /* view bar: how the chart shows the data, right above it */
+    .st-key-viewbar { background:var(--bar); border:1px solid var(--rule); padding:8px 10px 6px; gap:.2rem; }
+    .st-key-viewbar [data-testid="stHorizontalBlock"] { gap: 1.2rem; }
+    .st-key-viewbar [data-testid="stWidgetLabel"] p { font-weight:600; font-size:11px !important;
+        text-transform:uppercase; letter-spacing:.04em; }
+    .st-key-viewbar [data-testid="stButtonGroup"] button { padding:3px 10px; font-size:12px; }
+    .view-hint { color:var(--muted); font-size:11px; }
+    .warn { color:#8a5a10; }
+    .st-key-chart_box { border-top:0 !important; margin-top:-.4rem; }
 
     /* chart box */
     .st-key-chart_box { border:1px solid var(--rule); padding:12px 14px 8px; }
@@ -178,6 +197,8 @@ if "picked" not in ss:
             if ax == "r":
                 ss.right.add(sid)
     ss.kind = qp.get("t", "level") if qp.get("t") in TRANSFORM_LABELS else "level"
+    ss.adj_pref = qp.get("adj", "") if qp.get("adj") in ADJ_LABELS else ""
+    ss.kind_last, ss.adj_last = ss.kind, ss.adj_pref
 
     def _month(text: str | None, fallback: date | None) -> date | None:
         try:
@@ -229,22 +250,31 @@ def on_row_adjust(old: str) -> None:
         ss.notice = "Esa versión ya está seleccionada."
 
 
-def on_adjust_all() -> None:
-    adj = ss.adj_all
-    if adj is None:
+def on_kind() -> None:
+    if ss.kind is None:  # clicking the active button again would unselect it
+        ss.kind = ss.kind_last
+    ss.kind_last = ss.kind
+
+
+def on_adj_pref() -> None:
+    """Preferred published version: swaps the selection and filters the catalog."""
+    if ss.adj_pref is None:
+        ss.adj_pref = ss.adj_last
+    ss.adj_last = adj = ss.adj_pref
+    if not adj:
+        ss.notice = "Ajuste: se muestran todas las versiones publicadas"
         return
     changed = missing = 0
     for sid in list(ss.picked):
         fam = versions.get(sid)
-        if not fam:
-            continue
-        target = next((v for v in fam if meta.at[v, "adjustment"] == adj), None)
+        target = next((v for v in fam if meta.at[v, "adjustment"] == adj), None) if fam else None
         if target is None:
-            missing += 1
+            missing += meta.at[sid, "adjustment"] != adj
         elif swap(sid, target):
             changed += 1
+    ss.editor_version += 1
     ss.notice = f"{ADJ_LABELS[adj]}: {changed} serie(s) cambiada(s)" + (
-        f" · {missing} sin esa versión" if missing else "")
+        f" · {missing} sin esa versión publicada" if missing else "")
 
 
 def clear() -> None:
@@ -263,21 +293,13 @@ st.markdown(
 
 # ---------- toolbar ----------
 with st.container(key="toolbar"):
-    t1, t2, t3, t4, _, t6, t7, t8 = st.columns([1.6, 1.1, 1.1, 2.4, 0.6, 1.1, 1.1, 0.8], vertical_alignment="bottom")
-    kind = t1.selectbox("Transformación", list(TRANSFORM_LABELS), format_func=TRANSFORM_LABELS.get, key="kind")
+    t2, t3, _, t6, t7, t8 = st.columns([1.1, 1.1, 3.6, 1.1, 1.1, 0.8], vertical_alignment="bottom")
     t2.date_input("Desde", key="start", min_value=date(1950, 1, 1), format="YYYY-MM-DD")
     t3.date_input("Hasta", key="end", min_value=date(1950, 1, 1), format="YYYY-MM-DD")
-    with_versions = [s for s in ss.picked if s in versions]
-    if with_versions:
-        available = [a for a in ADJ_ORDER if any(meta.at[v, "adjustment"] == a for s in with_versions for v in versions[s])]
-        current = {meta.at[s, "adjustment"] for s in with_versions}
-        ss.adj_all = current.pop() if len(current) == 1 else None
-        t4.segmented_control(
-            "Ajuste (todas)", available, format_func=ADJ_SHORT.get, key="adj_all", on_change=on_adjust_all,
-            help="Cambia cada serie seleccionada a su versión publicada: original, corregida de calendario o desestacionalizada.",
-        )
     t8.button("Limpiar", on_click=clear, width="stretch")
 
+kind: str = ss.kind
+adj_pref: str = ss.adj_pref
 left, work = st.columns([1, 2.7], gap="medium")
 
 # ---------- catalog (left pane) ----------
@@ -294,6 +316,9 @@ with left, st.container(key="catalog_pane"):
                          label_visibility="collapsed")
     if group != "*":
         view = view[view["group"] == group]
+    if adj_pref:  # one version per family: the preferred one when it exists
+        has_pref = {sid for sid, fam in versions.items() if any(meta.at[v, "adjustment"] == adj_pref for v in fam)}
+        view = view[~view["series_id"].isin(has_pref) | (view["adjustment"] == adj_pref)]
 
     tags = view["measure"].map(lambda m: "" if m == "level" else MEASURE_LABELS[m]) + view.apply(
         lambda r: (" " if r["measure"] != "level" else "") + ADJ_SHORT[r["adjustment"]]
@@ -351,8 +376,7 @@ wide = pd.DataFrame(frames).sort_index() if frames else pd.DataFrame()
 
 # ---------- work area: selected grid + chart ----------
 with work:
-    st.markdown('<div class="pane-title">Series seleccionadas <span class="hint">· la transformación solo se aplica a '
-                'series en nivel</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="pane-title">Series seleccionadas</div>', unsafe_allow_html=True)
     if not picked:
         st.markdown('<p class="muted">Marca series en el catálogo de la izquierda (máx. 8).</p>', unsafe_allow_html=True)
     else:
@@ -380,7 +404,12 @@ with work:
                     )
                 else:
                     adj = meta.at[sid, "adjustment"]
-                    c[7].markdown(f'<span class="muted">{ADJ_SHORT[adj] if adj != "nsa" else "—"}</span>', unsafe_allow_html=True)
+                    if adj_pref and adj != adj_pref:
+                        c[7].markdown(f'<span class="warn" title="La fuente no publica esta serie en versión '
+                                      f'{ADJ_LABELS[adj_pref].lower()}">{ADJ_SHORT[adj]} · sin {ADJ_SHORT[adj_pref].lower()}</span>',
+                                      unsafe_allow_html=True)
+                    else:
+                        c[7].markdown(f'<span class="muted">{ADJ_SHORT[adj] if adj != "nsa" else "—"}</span>', unsafe_allow_html=True)
                 c[8].markdown(shown_as(sid))
                 if c[9].button("Der." if sid in right else "Izq.", key=f"ax_{sid}"):
                     right.symmetric_difference_update({sid})
@@ -394,6 +423,24 @@ with work:
     def axis_title(ids: list[str]) -> str:
         labels = {meta.at[s, "unit"] if shown_as(s) == "Nivel" else shown_as(s).replace(" (origen)", "") for s in ids}
         return labels.pop() if len(labels) == 1 else ""
+
+    with st.container(key="viewbar"):
+        v1, v2 = st.columns([1.15, 1])
+        v1.segmented_control("Mostrar como", list(TRANSFORM_BUTTONS), format_func=TRANSFORM_BUTTONS.get,
+                             key="kind", on_change=on_kind)
+        v2.segmented_control("Ajuste estacional", list(ADJ_BUTTONS), format_func=ADJ_BUTTONS.get,
+                             key="adj_pref", on_change=on_adj_pref,
+                             help="Elige la versión publicada por la fuente. Cambia las series seleccionadas y "
+                                  "filtra el catálogo; «Todas» muestra todas las versiones.")
+        hints = [TRANSFORM_HINTS[kind]]
+        rates = sum(meta.at[s, "measure"] != "level" for s in picked)
+        if rates and kind != "level":
+            hints.append(f"{rates} serie(s) ya publicada(s) como tasa se muestran sin transformar.")
+        if adj_pref:
+            without = sum(meta.at[s, "adjustment"] != adj_pref for s in picked)
+            hints.append(f"Catálogo filtrado a la versión {ADJ_LABELS[adj_pref].lower()} cuando existe"
+                         + (f"; {without} serie(s) seleccionada(s) no la tienen." if without else "."))
+        st.markdown(f'<div class="view-hint">{html.escape(" ".join(hints))}</div>', unsafe_allow_html=True)
 
     with st.container(key="chart_box"):
         if picked:
@@ -457,6 +504,8 @@ if picked:
     params["s"] = ",".join(s + (":r" if s in right else "") for s in picked)
 if kind != "level":
     params["t"] = kind
+if adj_pref:
+    params["adj"] = adj_pref
 if ss.start:
     params["from"] = ss.start.strftime("%Y-%m")
 if ss.end:
