@@ -13,6 +13,10 @@
 - base: the name with the adjustment wording (and INE table codes) removed.
   Series sharing group + base are versions of the same series, so the
   dashboards can switch between them.
+- stem: the name without the measure ("Índice", "Variación anual", ...).
+  Series sharing group + stem + adjustment are one index plus the rates the
+  source publishes for it; the dashboards list only the index and use the
+  published rates instead of computing them.
 """
 
 from __future__ import annotations
@@ -84,8 +88,12 @@ def classify(name: str) -> dict[str, str]:
     name = name.strip().rstrip(".").strip()
     # INE: "<concept>. <Índice | Variación mensual | ...>"
     head, sep, tail = name.rpartition(". ")
+    # stem: the name without the measure. The index and the rates the source
+    # publishes for it (m/m, y/y, ytd) share group + stem + adjustment.
+    stem = base_of(name)
     if sep and re.match(r"(?i)^(índice|indice|variaci[oó]n)", tail):
         concept, variant = head, tail
+        stem = base_of(head)
     elif " · " in name:  # "IASS · Ajustado calendario (60289)"
         concept, variant = name.split(" · ", 1)
     elif " — " in name:  # "Tasa de paro (SA) — España"
@@ -99,4 +107,5 @@ def classify(name: str) -> dict[str, str]:
         "measure": measure,
         "adjustment": adjustment_of(name),
         "base": base_of(name),
+        "stem": stem,
     }

@@ -262,6 +262,7 @@ def test_classify_groups_siblings_and_flags_transformed():
         "measure": "level",
         "adjustment": "nsa",
         "base": "iass",
+        "stem": "iass",
     }
     assert classify("Tasa de paro (SA) — España")["concept"] == "Tasa de paro (SA)"
     assert classify("SIMULADA - serie Excel")["variant"] == ""
@@ -303,3 +304,19 @@ def test_store_writes_adjustment_columns(tmp_path):
     c = {x["series_id"]: x for x in csv.DictReader(cat.open(encoding="utf-8"))}
     assert (c["sa"]["adjustment"], c["sa"]["base"]) == ("sa", "ipi")
     assert c["raw"]["adjustment"] == "trend"  # config override wins
+
+
+def test_classify_stem_links_index_and_published_rates():
+    from pipeline.classify import classify
+
+    names = [
+        "Nacional. Bebidas alcohólicas y tabaco. Índice.",
+        "Nacional. Bebidas alcohólicas y tabaco. Variación mensual.",
+        "Nacional. Bebidas alcohólicas y tabaco. Variación anual.",
+        "Nacional. Bebidas alcohólicas y tabaco. Variación en lo que va de año.",
+    ]
+    got = [classify(n) for n in names]
+    assert {g["stem"] for g in got} == {"nacional bebidas alcoholicas y tabaco"}
+    assert [g["measure"] for g in got] == ["level", "pct", "yoy", "ytd"]
+    # different series keep different stems
+    assert classify("Tasa de paro (SA) — España")["stem"] != classify("Tasa de paro (SA) — Zona euro")["stem"]

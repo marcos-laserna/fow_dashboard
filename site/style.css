@@ -46,6 +46,7 @@ aside { border-right: 1px solid var(--rule); display: flex; flex-direction: colu
 .code { font-family: Consolas, "Courier New", monospace; color: var(--navy); overflow: hidden; text-overflow: ellipsis; }
 .tag { font-size: 10px; padding: 0 4px; border: 1px solid var(--rule); border-radius: 2px; color: var(--muted); }
 .tag.tx { border-color: #b7791f; color: #8a5a10; background: #fff8e8; }
+.tag.rt { border-color: #8fb89c; color: #1e6a38; background: #eef8f1; }
 .tag.adj { border-color: #7d93bd; color: var(--navy); background: #eef3fb; }
 .muted { color: var(--muted); }
 
@@ -77,6 +78,9 @@ td button { padding: 0 6px; font-size: 11px; }
 .viewbar .seg button { padding: 3px 10px; }
 #view-hint { flex-basis: 100%; color: var(--muted); font-size: 11px; }
 .warn { color: #8a5a10; }
+.small { font-size: 11px; }
+td.shown { white-space: normal; min-width: 160px; }
+.seg.multi button.on + button.on { border-left-color: #3b5b93; }
 .viewbar + .chart-box { margin-top: 0; border-top: 0; }
 
 .chart-box { margin: 12px; border: 1px solid var(--rule); padding: 12px 14px 8px; }

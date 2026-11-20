@@ -49,6 +49,20 @@ Para que dos series queden enlazadas, descarga todas sus versiones (como hacen I
 IPI). Si el nombre no lo deja claro, fíjalo en `data/series.json` con
 `"adjustment": "sa"` y un `"base"` común.
 
+### Tasas oficiales, varias transformaciones y doble eje
+
+Cuando la fuente publica un índice y sus tasas (p. ej. IPC: índice, variación
+mensual, anual y en lo que va de año), el catálogo solo muestra el índice; las tasas
+comparten `group` + `stem` + `adjustment` en el catálogo. En *Mostrar como* se pueden
+marcar varias transformaciones a la vez: % periodo anterior, % interanual y % acum. año
+usan la tasa **oficial** si existe (sin calcular) y si no se calculan desde el nivel
+(salvo % acum. año, que solo se muestra si está publicada). La tabla indica
+«(oficial)» o «(calc.)» en cada línea.
+
+*Ejes · Doble automático* pone niveles a la izquierda y variaciones a la derecha; si
+todo es del mismo tipo pero las escalas difieren más de 4 veces, separa las series de
+escala menor. Cada fila puede fijar su eje (Auto → Izq. → Dcha.).
+
 ## Tests
 
 ```bash

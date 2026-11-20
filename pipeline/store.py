@@ -14,6 +14,7 @@ CATALOG_FIELDS = (
     "measure",
     "adjustment",
     "base",
+    "stem",
     "frequency",
     "unit",
     "first_period",
@@ -32,7 +33,7 @@ def merge_write(
     previous_catalog: Path | None = None,
     meta: dict[str, dict[str, str]] | None = None,
 ) -> int:
-    """meta: optional per-series overrides of concept/variant/measure/adjustment/base
+    """meta: optional per-series overrides of concept/variant/measure/adjustment/base/stem
     (from config)."""
     groups = groups or {}
     meta = meta or {}

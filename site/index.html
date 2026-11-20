@@ -37,7 +37,7 @@
       <table id="selected">
         <thead><tr>
           <th></th><th>Código</th><th>Descripción</th><th>Frec.</th><th>Inicio</th><th>Fin</th>
-          <th class="num">Último</th><th>Medida</th><th>Ajuste</th><th>Mostrado como</th><th>Eje</th><th></th>
+          <th class="num">Último</th><th>Tasas oficiales</th><th>Ajuste</th><th>Mostrado como</th><th>Eje</th><th></th>
         </tr></thead>
         <tbody></tbody>
       </table>
@@ -45,13 +45,15 @@
 
       <div class="viewbar">
         <div class="vgroup"><span class="vlabel">Mostrar como</span>
-          <span class="seg" id="transform-seg">
+          <span class="seg multi" id="transform-seg" title="Puedes marcar varias a la vez">
             <button type="button" data-t="level">Nivel</button>
             <button type="button" data-t="pct">% vs. periodo anterior</button>
             <button type="button" data-t="yoy">% interanual</button>
+            <button type="button" data-t="ytd" title="Solo si la fuente la publica">% acum. año</button>
             <button type="button" data-t="diff">Diferencia</button>
             <button type="button" data-t="rebase">Base 100</button>
           </span>
+          <span class="muted small">(varias a la vez)</span>
         </div>
         <div class="vgroup"><span class="vlabel">Ajuste estacional</span>
           <span class="seg" id="adjust-seg">
@@ -59,6 +61,12 @@
             <button type="button" data-adj="nsa" title="Serie original publicada">Original</button>
             <button type="button" data-adj="cal" title="Corregida de efectos de calendario">Corr. calendario</button>
             <button type="button" data-adj="sa" title="Corregida de efectos estacionales y de calendario">Desestacionalizada</button>
+          </span>
+        </div>
+        <div class="vgroup"><span class="vlabel">Ejes</span>
+          <span class="seg" id="axis-seg">
+            <button type="button" data-dual="1" title="Niveles a la izquierda y variaciones a la derecha; también separa series de escalas muy distintas">Doble automático</button>
+            <button type="button" data-dual="0" title="Todas las series en el eje izquierdo (salvo las fijadas a la derecha)">Uno solo</button>
           </span>
         </div>
         <div id="view-hint"></div>
