@@ -5,12 +5,14 @@
     {
       "file": "Tabla_monitor.csv",
       "updated_at": "2026-11-23T12:28:05.650Z",
-      "size": 23701
+      "size": 23701,
+      "sha256": "8a0ed153cc43a76ee6d212f53794e57915db723a99b22bd2615b9073d8c01943"
     },
     {
       "file": "Datos_informe.csv",
       "updated_at": "2026-11-23T08:04:30.708Z",
-      "size": 3573364
+      "size": 3573364,
+      "sha256": "e95c6c7d0df022c39e0cfe881407c1ae3dbfa8db09a0e073910d8430e05de0b2"
     }
   ]
 }
