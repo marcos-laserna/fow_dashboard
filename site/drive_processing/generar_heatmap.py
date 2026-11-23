@@ -80,5 +80,7 @@ monitor = national.get('monitor')
 if monitor:
     apply_monitor(rows, monitor['rows'])
 result={'title':'España: Indicadores de consumo','unit':'%','note':'Indicador real; variación interanual de la media móvil de 28 días. Cierre de mes y semana.','rows':rows}
+if monitor:
+    result['monitor'] = {key: monitor.get(key) for key in ('source', 'updated_at', 'sha256')}
 (P/'bigdata_heatmap.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':')),encoding='utf8')
 print('Filas nacionales:',sum(r['group']=='nacional' for r in rows),'territoriales:',sum(r['group']=='territorial' for r in rows))

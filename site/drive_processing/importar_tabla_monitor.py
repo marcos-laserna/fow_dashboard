@@ -1,8 +1,11 @@
 """Import the published monthly and weekly observations from Drive."""
 import csv
+import hashlib
+import io
 import json
 import math
 import re
+import sys
 import unicodedata
 from datetime import date
 from pathlib import Path
@@ -58,11 +61,35 @@ def parse_columns(cells):
     return columns
 
 
+def unpack_row(cells):
+    if len(cells) != 1:
+        return cells
+    wrapped = cells[0]
+    if wrapped.startswith('"'):
+        return next(csv.reader([wrapped]))
+    label, separator, values = wrapped.partition(',"')
+    if separator:
+        # Wrapped exports may leave commas in the row label unquoted.
+        return [label, *next(csv.reader(['"' + values]))]
+    return cells
+
+
+def source_updated_at(source):
+    manifest = source.with_name('manifest.json')
+    if not manifest.is_file():
+        return None
+    files = json.loads(manifest.read_text(encoding='utf-8-sig')).get('files', [])
+    return next((item.get('updated_at') for item in files if item.get('file') == source.name), None)
+
+
 def read_monitor(source):
+    raw = source.read_bytes()
+    stream = io.StringIO(raw.decode('utf-8-sig'), newline='')
     rows = []
     group = None
-    with source.open(encoding='utf-8-sig', newline='') as stream:
-        for cells in csv.reader(stream):
+    with stream:
+        for row_number, fields in enumerate(csv.reader(stream), start=1):
+            cells = unpack_row(fields)
             if not cells or not cells[0].strip():
                 continue
             raw_label = cells[0].expandtabs(3)
@@ -86,14 +113,28 @@ def read_monitor(source):
             }
             for i, (frequency, period) in columns.items():
                 value = cells[i].strip() if i < len(cells) else ''
-                percent = None if value in ('', '-', '—') else float(value.replace(',', '.')) * 100
-                if percent is not None and not math.isfinite(percent):
-                    raise ValueError(f'Tabla_monitor.csv: invalid value for {label} at {period}')
-                row[frequency][period] = None if percent is None else round(percent, 6)
+                if value in ('', '-', '—'):
+                    row[frequency][period] = None
+                    continue
+                try:
+                    percent = float(value.replace(',', '.')) * 100
+                except ValueError:
+                    percent = math.nan
+                if not math.isfinite(percent):
+                    print(f'Tabla_monitor.csv:{row_number}: ignored {value!r} for {label!r} at {period}',
+                          file=sys.stderr)
+                    continue
+                row[frequency][period] = round(percent, 6)
             rows.append(row)
-    if not rows:
-        raise ValueError('Tabla_monitor.csv: no consumption rows found')
-    return {'source': source.name, 'rows': rows}
+    if not any(value is not None for row in rows
+               for frequency in ('monthly', 'weekly') for value in row[frequency].values()):
+        raise ValueError('Tabla_monitor.csv: no numeric consumption observations found')
+    return {
+        'source': source.name,
+        'updated_at': source_updated_at(source),
+        'sha256': hashlib.sha256(raw).hexdigest(),
+        'rows': rows,
+    }
 
 
 if __name__ == '__main__':
