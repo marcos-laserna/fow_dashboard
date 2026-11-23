@@ -1,7 +1,13 @@
 """Genera tabla de consumo real con valores de cierre mensual y semanal."""
 from pathlib import Path
 import json,calendar,datetime
-P=Path('.'); national=json.loads((P/'bigdata.json').read_text());geo=json.loads((P/'bigdata_geo/index.json').read_text())['groups'];macro=json.loads((P/'data.json').read_text())['series']
+from importar_tabla_monitor import normalize
+
+P = Path('.')
+national = json.loads((P / 'bigdata.json').read_text(encoding='utf-8'))
+macro = json.loads((P / 'data.json').read_text(encoding='utf-8'))['series']
+geo_index = P / 'bigdata_geo/index.json'
+geo = json.loads(geo_index.read_text(encoding='utf-8'))['groups'] if geo_index.exists() else {}
 regions={
  'ES-AN':['ES-AL','ES-CA','ES-CO','ES-GR','ES-H','ES-J','ES-MA','ES-SE'],
  'ES-AR':['ES-HU','ES-TE','ES-Z'],'ES-AS':['ES-O'],'ES-CN':['ES-GC','ES-TF'],'ES-CB':['ES-S'],
@@ -29,21 +35,50 @@ for key,title in [('ch_yoy','Consumo de los hogares (INE)'),('icm_yoy','Índice 
 for col,label in labels:
  s=next((s for s in national['series'] if s['label']==f'Consumo · {col} · Real'),None)
  if s:rows.append({'group':'nacional','level':0 if col=='Total coicops' else 1,'label':label,'source':'BBVA Research',**compact(s['data'])})
-province={a['id']:a for a in geo['Provincial']};cities={}
-for a in geo['Urbano']:cities.setdefault(city_province.get(a['id'][:2],''),[]).append(a)
+province={a['id']:a for a in geo.get('Provincial', [])};cities={}
+for a in geo.get('Urbano', []):cities.setdefault(city_province.get(a['id'][:2],''),[]).append(a)
 def territory(a,level):
  filename=next((f for f in a['files'] if '/real/' in f),None)
  if not filename:return
- src=json.loads((P/'bigdata_geo'/filename).read_text());s=next((s for s in src['series'] if ' · Total Consumo · Real' in s['label']),None)
+ src=json.loads((P/'bigdata_geo'/filename).read_text(encoding='utf-8'));s=next((s for s in src['series'] if ' · Total Consumo · Real' in s['label']),None)
  if s:rows.append({'group':'territorial','level':level,'label':a['label'],'source':'BBVA Research',**compact(s['data'])})
 used=set()
-for area in geo['CCAA']:
+for area in geo.get('CCAA', []):
  territory(area,0)
  for code in regions.get(area['id'],[]):
   if code in province:
    territory(province[code],1);used.add(code)
    for city in cities.get(code,[]):territory(city,2)
 assert set(province)==used, 'Provincias sin asignar: '+str(set(province)-used)
+
+
+def row_key(row):
+    return row['group'], row['level'], normalize(row['label'])
+
+
+def apply_monitor(rows, monitor_rows):
+    by_key = {row_key(row): row for row in rows}
+    previous = None
+    for published in monitor_rows:
+        key = row_key(published)
+        current = by_key.get(key)
+        if current is None:
+            if previous is not None and previous['group'] == published['group']:
+                index = rows.index(previous) + 1
+            else:
+                index = next((i for i, row in enumerate(rows) if row['group'] == published['group']), len(rows))
+            rows.insert(index, published)
+            by_key[key] = published
+            current = published
+        else:
+            for frequency in ('monthly', 'weekly'):
+                current[frequency].update(published[frequency])
+        previous = current
+
+
+monitor = national.get('monitor')
+if monitor:
+    apply_monitor(rows, monitor['rows'])
 result={'title':'España: Indicadores de consumo','unit':'%','note':'Indicador real; variación interanual de la media móvil de 28 días. Cierre de mes y semana.','rows':rows}
 (P/'bigdata_heatmap.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':')),encoding='utf8')
 print('Filas nacionales:',sum(r['group']=='nacional' for r in rows),'territoriales:',sum(r['group']=='territorial' for r in rows))

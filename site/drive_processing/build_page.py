@@ -11,6 +11,7 @@ if forecast.exists():
 encoded = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 bigdata_file = Path("bigdata.json")
 bigdata = json.loads(bigdata_file.read_text(encoding="utf-8")) if bigdata_file.exists() else {"series": []}
+bigdata.pop("monitor", None)  # The map reads bigdata_heatmap.json separately.
 big_encoded = json.dumps(bigdata, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 page = tpl.replace("__DATA__", encoded).replace("__BIGDATA__", big_encoded)
 Path("espana.html").write_text(page, encoding="utf-8")
