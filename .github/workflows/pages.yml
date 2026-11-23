@@ -5,8 +5,8 @@ on:
     branches: [main]
     paths:
       - "site/**"
+      - "!site/drive_processing/**"
       - "data/processed/*.csv"
-      - ".github/workflows/pages.yml"
   workflow_dispatch:
   workflow_run:
     workflows: ["Ingest data"]

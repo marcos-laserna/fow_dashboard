@@ -1,6 +1,6 @@
 # Manual CSV series
 
-This folder is the handoff point for manual series. Apps Script writes Turkey series here when `DRIVE_TURKEY_FOLDER_ID` is configured. The dashboard fetches `manifest.json` and each listed CSV.
+This folder contains CSV series from the Manual Drive folder. The dashboard fetches `manifest.json` and each listed CSV. Turkey uses the separate `../turkey_csv/` folder.
 
 Use one CSV per series. Required columns: `fecha`/`date` and `valor`/`value`. Optional columns include `unidad`/`unit`, `frecuencia`/`frequency`, and `id`. Metadata can appear on the first data row. IDs receive a `turquia_` prefix and the series appears in the manual data group.
 
