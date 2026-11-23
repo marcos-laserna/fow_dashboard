@@ -268,38 +268,50 @@ function slug_(value) {
 }
 
 function putGithubFile_(path, text, message, token) {
-  const existing = getGithubFile_(path, token);
-  if (existing && existing.text === text) return false;
-  const payload = {
-    message: message,
-    content: Utilities.base64Encode(Utilities.newBlob(text, 'text/plain').getBytes()),
-    branch: CONFIG.branch
-  };
-  if (existing) payload.sha = existing.sha;
-  const response = UrlFetchApp.fetch(githubContentsUrl_(path), {
-    method: 'put', contentType: 'application/json',
-    headers: githubHeaders_(token), payload: JSON.stringify(payload), muteHttpExceptions: true
-  });
-  const status = response.getResponseCode();
-  if (status < 200 || status >= 300) throw new Error('GitHub could not update ' + path + ' (HTTP ' + status + '): ' + response.getContentText().slice(0, 300));
-  return true;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const existing = getGithubFile_(path, token);
+    if (existing && existing.text === text) return false;
+    const payload = {
+      message: message,
+      content: Utilities.base64Encode(Utilities.newBlob(text, 'text/plain').getBytes()),
+      branch: CONFIG.branch
+    };
+    if (existing) payload.sha = existing.sha;
+    const response = UrlFetchApp.fetch(githubContentsUrl_(path), {
+      method: 'put', contentType: 'application/json',
+      headers: githubHeaders_(token), payload: JSON.stringify(payload), muteHttpExceptions: true
+    });
+    const status = response.getResponseCode();
+    if (status >= 200 && status < 300) return true;
+    if (status !== 409 || attempt === 3) {
+      throw new Error('GitHub could not update ' + path + ' (HTTP ' + status + '): ' + response.getContentText().slice(0, 300));
+    }
+    Utilities.sleep(300 * attempt);
+  }
+  return false;
 }
 
 function putGithubBytes_(path, bytes, message, token) {
-  const existing = getGithubFile_(path, token);
-  const payload = {
-    message: message,
-    content: Utilities.base64Encode(bytes),
-    branch: CONFIG.branch
-  };
-  if (existing) payload.sha = existing.sha;
-  const response = UrlFetchApp.fetch(githubContentsUrl_(path), {
-    method: 'put', contentType: 'application/json',
-    headers: githubHeaders_(token), payload: JSON.stringify(payload), muteHttpExceptions: true
-  });
-  const status = response.getResponseCode();
-  if (status < 200 || status >= 300) throw new Error('GitHub could not update ' + path + ' (HTTP ' + status + '): ' + response.getContentText().slice(0, 300));
-  return true;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const existing = getGithubFile_(path, token);
+    const payload = {
+      message: message,
+      content: Utilities.base64Encode(bytes),
+      branch: CONFIG.branch
+    };
+    if (existing) payload.sha = existing.sha;
+    const response = UrlFetchApp.fetch(githubContentsUrl_(path), {
+      method: 'put', contentType: 'application/json',
+      headers: githubHeaders_(token), payload: JSON.stringify(payload), muteHttpExceptions: true
+    });
+    const status = response.getResponseCode();
+    if (status >= 200 && status < 300) return true;
+    if (status !== 409 || attempt === 3) {
+      throw new Error('GitHub could not update ' + path + ' (HTTP ' + status + '): ' + response.getContentText().slice(0, 300));
+    }
+    Utilities.sleep(300 * attempt);
+  }
+  return false;
 }
 
 function getGithubFile_(path, token) {
