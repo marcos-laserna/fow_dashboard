@@ -44,7 +44,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add site/drive_processing/bigdata.json site/drive_processing/bigdata_geo site/drive_processing/bigdata_heatmap.json site/drive_processing/espana.html site/drive_processing/artifact.html site/drive_processing/index.html
+          git add -A site/drive_processing/
           if ! git diff --cached --quiet; then
             git commit -m "Build Drive processing dashboard"
             git push origin HEAD:main
